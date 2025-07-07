@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 import { ExpandableNavigation } from './ExpandableNavigation';
 import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X, Package, DollarSign, TrendingUp, Clock } from 'lucide-react';
 
@@ -8,23 +9,21 @@ export const ProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { addToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
   const [orderStats, setOrderStats] = useState({
     totalOrders: 0,
     totalSpent: 0,
     favoriteProduct: 'N/A',
     lastOrder: null as string | null
   });
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: '+54 9 11 1234-5678',
-    address: 'Av. Corrientes 1234, CABA',
-    birthDate: '2005-03-15',
-    course: user?.role === 'ciclo_basico' ? '3° Año' : '5° Año',
-    emergencyContact: 'María García - +54 9 11 8765-4321'
-  });
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
+    // Load user profile data
+    if (user) {
+      loadUserProfile();
+    }
+
     // Calculate real order statistics from localStorage
     const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
     const userOrders = allOrders.filter((order: any) => order.userId === user?.id);
@@ -59,27 +58,118 @@ export const ProfilePage: React.FC = () => {
     }
   }, [user]);
 
-  const handleSave = () => {
-    // Simulate saving profile data
-    addToast('Perfil actualizado correctamente', 'success');
-    setIsEditing(false);
-    
-    // In a real app, you would save to the database here
-    // For demo purposes, we'll just update localStorage
-    const updatedUser = { ...user, name: formData.name };
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  const loadUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Try to load from Supabase first
+      const { data: dbUser, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      let profile = {
+        name: user.name,
+        email: user.email,
+        phone: '',
+        address: '',
+        birthDate: '',
+        course: '',
+        emergencyContact: ''
+      };
+
+      if (dbUser && !error) {
+        // Use data from Supabase
+        profile = {
+          name: dbUser.name,
+          email: dbUser.email,
+          phone: dbUser.phone || '',
+          address: dbUser.address || '',
+          birthDate: dbUser.birth_date || '',
+          course: dbUser.course || '',
+          emergencyContact: dbUser.emergency_contact || ''
+        };
+      } else {
+        // Fallback to localStorage
+        const savedProfile = localStorage.getItem(`profile_${user.id}`);
+        if (savedProfile) {
+          const parsedProfile = JSON.parse(savedProfile);
+          profile = { ...profile, ...parsedProfile };
+        }
+      }
+
+      setProfileData(profile);
+      setFormData(profile);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      // Fallback to localStorage
+      const savedProfile = localStorage.getItem(`profile_${user.id}`);
+      let profile = {
+        name: user.name,
+        email: user.email,
+        phone: '',
+        address: '',
+        birthDate: '',
+        course: '',
+        emergencyContact: ''
+      };
+      
+      if (savedProfile) {
+        const parsedProfile = JSON.parse(savedProfile);
+        profile = { ...profile, ...parsedProfile };
+      }
+      
+      setProfileData(profile);
+      setFormData(profile);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      // Try to update in Supabase first
+      const { error } = await supabase
+        .from('users')
+        .update({
+          phone: formData.phone || null,
+          address: formData.address || null,
+          birth_date: formData.birthDate || null,
+          course: formData.course || null,
+          emergency_contact: formData.emergencyContact || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Supabase update error:', error);
+        // Fallback to localStorage
+        const profileToSave = {
+          phone: formData.phone,
+          address: formData.address,
+          birthDate: formData.birthDate,
+          course: formData.course,
+          emergencyContact: formData.emergencyContact
+        };
+        localStorage.setItem(`profile_${user.id}`, JSON.stringify(profileToSave));
+        addToast('Perfil actualizado localmente (demo)', 'success');
+      } else {
+        addToast('Perfil actualizado correctamente en la base de datos', 'success');
+      }
+
+      setProfileData({ ...formData });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      addToast('Error al actualizar perfil', 'error');
+    }
   };
 
   const handleCancel = () => {
-    setFormData({
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: '+54 9 11 1234-5678',
-      address: 'Av. Corrientes 1234, CABA',
-      birthDate: '2005-03-15',
-      course: user?.role === 'ciclo_basico' ? '3° Año' : '5° Año',
-      emergencyContact: 'María García - +54 9 11 8765-4321'
-    });
+    if (profileData) {
+      setFormData({ ...profileData });
+    }
     setIsEditing(false);
   };
 
@@ -97,6 +187,17 @@ export const ProfilePage: React.FC = () => {
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString()}`;
   };
+
+  if (!profileData) {
+    return (
+      <div className="min-h-screen bg-cream-50 pl-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream-50 pl-16">
@@ -159,19 +260,10 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Nombre Completo
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{formData.name}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900">{user?.name}</span>
+                    </div>
                   </div>
 
                   <div>
@@ -180,7 +272,7 @@ export const ProfilePage: React.FC = () => {
                     </label>
                     <div className="flex items-center space-x-2">
                       <Mail className="h-4 w-4 text-gray-400" />
-                      <span className="text-gray-900">{formData.email}</span>
+                      <span className="text-gray-900">{user?.email}</span>
                     </div>
                   </div>
 
@@ -194,11 +286,12 @@ export const ProfilePage: React.FC = () => {
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="+54 9 11 1234-5678"
                       />
                     ) : (
                       <div className="flex items-center space-x-2">
                         <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{formData.phone}</span>
+                        <span className="text-gray-900">{formData.phone || 'No especificado'}</span>
                       </div>
                     )}
                   </div>
@@ -217,7 +310,9 @@ export const ProfilePage: React.FC = () => {
                     ) : (
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{new Date(formData.birthDate).toLocaleDateString('es-AR')}</span>
+                        <span className="text-gray-900">
+                          {formData.birthDate ? new Date(formData.birthDate).toLocaleDateString('es-AR') : 'No especificado'}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -232,11 +327,12 @@ export const ProfilePage: React.FC = () => {
                         value={formData.address}
                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="Tu dirección"
                       />
                     ) : (
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">{formData.address}</span>
+                        <span className="text-gray-900">{formData.address || 'No especificado'}</span>
                       </div>
                     )}
                   </div>
@@ -259,6 +355,7 @@ export const ProfilePage: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
+                      <option value="">Selecciona tu curso</option>
                       <option value="1° Año">1° Año</option>
                       <option value="2° Año">2° Año</option>
                       <option value="3° Año">3° Año</option>
@@ -267,7 +364,7 @@ export const ProfilePage: React.FC = () => {
                       <option value="6° Año">6° Año</option>
                     </select>
                   ) : (
-                    <span className="text-gray-900">{formData.course}</span>
+                    <span className="text-gray-900">{formData.course || 'No especificado'}</span>
                   )}
                 </div>
 
@@ -293,7 +390,7 @@ export const ProfilePage: React.FC = () => {
                       placeholder="Nombre - Teléfono"
                     />
                   ) : (
-                    <span className="text-gray-900">{formData.emergencyContact}</span>
+                    <span className="text-gray-900">{formData.emergencyContact || 'No especificado'}</span>
                   )}
                 </div>
               </div>

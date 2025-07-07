@@ -4,7 +4,11 @@ import { useToast } from '../../contexts/ToastContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Coffee, Mail, Lock } from 'lucide-react';
 
-export const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
+}
+
+export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAuth();
@@ -85,25 +89,15 @@ export const LoginForm: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 border-t border-gray-200 pt-8">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Cuentas de demostración:</h3>
-            <div className="space-y-2">
-              {demoAccounts.map((account) => (
-                <button
-                  key={account.email}
-                  onClick={() => {
-                    setEmail(account.email);
-                    setPassword('demo123');
-                  }}
-                  className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="text-sm font-medium text-gray-900">{account.role}</div>
-                  <div className="text-xs text-gray-600">{account.email}</div>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mt-3 text-center">
-              Contraseña para todas las cuentas: <strong>demo123</strong>
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              ¿No tienes una cuenta?{' '}
+              <button
+                onClick={onSwitchToRegister}
+                className="text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Crear Cuenta
+              </button>
             </p>
           </div>
         </div>
