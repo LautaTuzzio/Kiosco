@@ -25,33 +25,23 @@ export const UsersPage: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      // Try to load from Supabase first
       const { data: supabaseUsers, error } = await supabase
         .from('users')
         .select('id, name, email, role, last_login, is_active')
         .order('created_at', { ascending: false });
 
-      if (supabaseUsers && !error) {
+      if (error) {
+        console.error('Error loading users:', error);
+        addToast('Error al cargar usuarios', 'error');
+        return;
+      }
+
+      if (supabaseUsers) {
         const formattedUsers = supabaseUsers.map(user => ({
           ...user,
           lastLogin: user.last_login ? new Date(user.last_login).toLocaleDateString('es-AR') : 'Nunca'
         }));
         setUsers(formattedUsers);
-      } else {
-        // Fallback to localStorage
-        const savedUsers = JSON.parse(localStorage.getItem('allUsers') || '[]');
-        if (savedUsers.length === 0) {
-          const demoUsers = [
-            { id: '1', name: 'Juan Pérez', email: 'usuario@ciclobasico.com', role: 'ciclo_basico', lastLogin: '2024-06-14' },
-            { id: '2', name: 'Ana García', email: 'usuario@ciclosuperior.com', role: 'ciclo_superior', lastLogin: '2024-06-14' },
-            { id: '3', name: 'Pedro López', email: 'usuario@kiosquero.com', role: 'kiosquero', lastLogin: '2024-06-13' },
-            { id: '4', name: 'María Rodríguez', email: 'usuario@admin.com', role: 'admin', lastLogin: '2024-06-13' },
-          ];
-          setUsers(demoUsers);
-          localStorage.setItem('allUsers', JSON.stringify(demoUsers));
-        } else {
-          setUsers(savedUsers);
-        }
       }
     } catch (error) {
       console.error('Error loading users:', error);
@@ -59,12 +49,6 @@ export const UsersPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const saveUsers = async (updatedUsers: any[]) => {
-    setUsers(updatedUsers);
-    // Also save to localStorage as backup
-    localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
   };
 
   const handleEditUser = (user: any) => {
@@ -76,7 +60,6 @@ export const UsersPage: React.FC = () => {
     if (!editingUser) return;
 
     try {
-      // Try to update in Supabase first
       const { error } = await supabase
         .from('users')
         .update({
@@ -88,20 +71,15 @@ export const UsersPage: React.FC = () => {
         .eq('id', editingUser);
 
       if (error) {
-        console.error('Supabase update error:', error);
-        // Fallback to localStorage update
-        const updatedUsers = users.map(user => 
-          user.id === editingUser ? { ...editForm, lastLogin: user.lastLogin } : user
-        );
-        await saveUsers(updatedUsers);
+        console.error('Error updating user:', error);
+        addToast('Error al actualizar usuario', 'error');
       } else {
-        // Reload users from database
         await loadUsers();
+        addToast('Usuario actualizado correctamente', 'success');
       }
 
       setEditingUser(null);
       setEditForm({});
-      addToast('Usuario actualizado correctamente', 'success');
     } catch (error) {
       console.error('Error updating user:', error);
       addToast('Error al actualizar usuario', 'error');
@@ -121,23 +99,18 @@ export const UsersPage: React.FC = () => {
     
     if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       try {
-        // Try to delete from Supabase first
         const { error } = await supabase
           .from('users')
           .delete()
           .eq('id', userId);
 
         if (error) {
-          console.error('Supabase delete error:', error);
-          // Fallback to localStorage delete
-          const updatedUsers = users.filter(user => user.id !== userId);
-          await saveUsers(updatedUsers);
+          console.error('Error deleting user:', error);
+          addToast('Error al eliminar usuario', 'error');
         } else {
-          // Reload users from database
           await loadUsers();
+          addToast('Usuario eliminado correctamente', 'success');
         }
-
-        addToast('Usuario eliminado correctamente', 'success');
       } catch (error) {
         console.error('Error deleting user:', error);
         addToast('Error al eliminar usuario', 'error');
@@ -157,7 +130,6 @@ export const UsersPage: React.FC = () => {
     }
 
     try {
-      // Try to create in Supabase first
       const { data: createdUser, error } = await supabase
         .from('users')
         .insert([
@@ -165,7 +137,7 @@ export const UsersPage: React.FC = () => {
             name: newUser.name,
             email: newUser.email,
             role: newUser.role,
-            password_hash: `$2a$10$dummy.hash.for.${newUser.password}`, // In production, hash properly
+            password_hash: newUser.password, // In production, hash properly
             is_active: true
           }
         ])
@@ -173,24 +145,14 @@ export const UsersPage: React.FC = () => {
         .single();
 
       if (error) {
-        console.error('Supabase create error:', error);
-        // Fallback to localStorage create
-        const userToAdd = {
-          id: Date.now().toString(),
-          ...newUser,
-          lastLogin: 'Nunca'
-        };
-        const updatedUsers = [...users, userToAdd];
-        await saveUsers(updatedUsers);
-        addToast('Usuario creado localmente (demo)', 'success');
+        console.error('Error creating user:', error);
+        addToast('Error al crear usuario', 'error');
       } else {
-        // Reload users from database
         await loadUsers();
-        addToast('Usuario creado correctamente en la base de datos', 'success');
+        addToast('Usuario creado correctamente', 'success');
+        setNewUser({ name: '', email: '', role: 'ciclo_basico', password: '' });
+        setShowAddModal(false);
       }
-      
-      setNewUser({ name: '', email: '', role: 'ciclo_basico', password: '' });
-      setShowAddModal(false);
     } catch (error) {
       console.error('Error creating user:', error);
       addToast('Error al crear usuario', 'error');

@@ -19,42 +19,72 @@ export const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
+    // Calculate real order statistics from localStorage
+    const loadOrderStats = async () => {
+      if (!user) return;
+
+      try {
+        const { data: orders, error } = await supabase
+          .from('orders')
+          .select(`
+            total_amount,
+            created_at,
+            order_items (
+              quantity,
+              products (name)
+            )
+          `)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error loading order stats:', error);
+          return;
+        }
+
+        if (orders && orders.length > 0) {
+          const totalOrders = orders.length;
+          const totalSpent = orders.reduce((sum: number, order: any) => sum + order.total_amount, 0);
+          
+          // Find most ordered product
+          const productCounts: { [key: string]: number } = {};
+          orders.forEach((order: any) => {
+            order.order_items?.forEach((item: any) => {
+              const productName = item.products?.name;
+              if (productName) {
+                productCounts[productName] = (productCounts[productName] || 0) + item.quantity;
+              }
+            });
+          });
+          
+          const favoriteProduct = Object.keys(productCounts).length > 0 
+            ? Object.entries(productCounts).sort(([,a], [,b]) => (b as number) - (a as number))[0][0]
+            : 'N/A';
+          
+          const lastOrder = orders.sort((a: any, b: any) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]?.created_at || null;
+          
+          setOrderStats({
+            totalOrders,
+            totalSpent,
+            favoriteProduct,
+            lastOrder
+          });
+        }
+      } catch (error) {
+        console.error('Error loading order stats:', error);
+      }
+    };
+
+    if (user) {
+      loadOrderStats();
+    }
+  }, [user]);
+
+  useEffect(() => {
     // Load user profile data
     if (user) {
       loadUserProfile();
-    }
-
-    // Calculate real order statistics from localStorage
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const userOrders = allOrders.filter((order: any) => order.userId === user?.id);
-    
-    if (userOrders.length > 0) {
-      const totalOrders = userOrders.length;
-      const totalSpent = userOrders.reduce((sum: number, order: any) => sum + order.totalAmount, 0);
-      
-      // Find most ordered product
-      const productCounts: { [key: string]: number } = {};
-      userOrders.forEach((order: any) => {
-        order.items.forEach((item: any) => {
-          const productName = item.product.name;
-          productCounts[productName] = (productCounts[productName] || 0) + item.quantity;
-        });
-      });
-      
-      const favoriteProduct = Object.keys(productCounts).length > 0 
-        ? Object.entries(productCounts).sort(([,a], [,b]) => (b as number) - (a as number))[0][0]
-        : 'N/A';
-      
-      const lastOrder = userOrders.sort((a: any, b: any) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0]?.createdAt || null;
-      
-      setOrderStats({
-        totalOrders,
-        totalSpent,
-        favoriteProduct,
-        lastOrder
-      });
     }
   }, [user]);
 
@@ -62,26 +92,19 @@ export const ProfilePage: React.FC = () => {
     if (!user) return;
 
     try {
-      // Try to load from Supabase first
       const { data: dbUser, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      let profile = {
-        name: user.name,
-        email: user.email,
-        phone: '',
-        address: '',
-        birthDate: '',
-        course: '',
-        emergencyContact: ''
-      };
+      if (error) {
+        console.error('Error loading profile:', error);
+        return;
+      }
 
-      if (dbUser && !error) {
-        // Use data from Supabase
-        profile = {
+      if (dbUser) {
+        const profile = {
           name: dbUser.name,
           email: dbUser.email,
           phone: dbUser.phone || '',
@@ -90,38 +113,12 @@ export const ProfilePage: React.FC = () => {
           course: dbUser.course || '',
           emergencyContact: dbUser.emergency_contact || ''
         };
-      } else {
-        // Fallback to localStorage
-        const savedProfile = localStorage.getItem(`profile_${user.id}`);
-        if (savedProfile) {
-          const parsedProfile = JSON.parse(savedProfile);
-          profile = { ...profile, ...parsedProfile };
-        }
+        setProfileData(profile);
+        setFormData(profile);
       }
 
-      setProfileData(profile);
-      setFormData(profile);
     } catch (error) {
       console.error('Error loading profile:', error);
-      // Fallback to localStorage
-      const savedProfile = localStorage.getItem(`profile_${user.id}`);
-      let profile = {
-        name: user.name,
-        email: user.email,
-        phone: '',
-        address: '',
-        birthDate: '',
-        course: '',
-        emergencyContact: ''
-      };
-      
-      if (savedProfile) {
-        const parsedProfile = JSON.parse(savedProfile);
-        profile = { ...profile, ...parsedProfile };
-      }
-      
-      setProfileData(profile);
-      setFormData(profile);
     }
   };
 
@@ -129,7 +126,6 @@ export const ProfilePage: React.FC = () => {
     if (!user) return;
 
     try {
-      // Try to update in Supabase first
       const { error } = await supabase
         .from('users')
         .update({
@@ -143,23 +139,14 @@ export const ProfilePage: React.FC = () => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Supabase update error:', error);
-        // Fallback to localStorage
-        const profileToSave = {
-          phone: formData.phone,
-          address: formData.address,
-          birthDate: formData.birthDate,
-          course: formData.course,
-          emergencyContact: formData.emergencyContact
-        };
-        localStorage.setItem(`profile_${user.id}`, JSON.stringify(profileToSave));
-        addToast('Perfil actualizado localmente (demo)', 'success');
+        console.error('Error updating profile:', error);
+        addToast('Error al actualizar perfil', 'error');
       } else {
-        addToast('Perfil actualizado correctamente en la base de datos', 'success');
+        setProfileData({ ...formData });
+        setIsEditing(false);
+        addToast('Perfil actualizado correctamente', 'success');
       }
 
-      setProfileData({ ...formData });
-      setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       addToast('Error al actualizar perfil', 'error');

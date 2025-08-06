@@ -2,10 +2,31 @@ import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { useNavigate } from 'react-router-dom';
-import { ExpandableNavigation } from './ExpandableNavigation';
-import { BREAK_TIMES } from '../../data/mockData';
-import { CreditCard, Smartphone, DollarSign, Clock, ArrowLeft } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { ExpandableNavigation } from "./ExpandableNavigation";
+import { CreditCard, Smartphone, DollarSign, Clock, ArrowLeft } from "lucide-react";
+import { supabase } from '../../lib/supabase';
+
+const BREAK_TIMES = {
+  ciclo_basico: [
+    '09:30 - 09:45',
+    '10:30 - 10:45',
+    '11:30 - 11:45',
+    '12:30 - 12:45',
+    '13:30 - 13:45',
+    '14:30 - 14:45',
+    '15:30 - 15:45',
+  ],
+  ciclo_superior: [
+    '10:00 - 10:15',
+    '11:00 - 11:15',
+    '12:00 - 12:15',
+    '13:00 - 13:15',
+    '14:00 - 14:15',
+    '15:00 - 15:15',
+    '16:00 - 16:15',
+  ]
+};
 
 export const CheckoutPage: React.FC = () => {
   const { items, getTotalAmount, clearCart } = useCart();
@@ -32,36 +53,97 @@ export const CheckoutPage: React.FC = () => {
       return;
     }
 
+    if (!user) {
+      addToast('Debes iniciar sesión para realizar un pedido', 'error');
+      return;
+    }
+
     setIsProcessing(true);
 
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Generate order ID in format ORD-XXX
+      const orderId = `ORD-${Math.floor(100 + Math.random() * 900)}`;
+      
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          id: orderId,
+          user_id: user.id,
+          total_amount: getTotalAmount(),
+          scheduled_time: selectedTime,
+          payment_method: paymentMethod,
+          status: 'pendiente',
+          user_cycle: userCycle,
+          notes: ''
+        })
+        .select()
+        .single();
 
-    // Create order
-    const orderId = `ORD-${Date.now()}`;
-    
-    // Store order in localStorage for demo
-    const order = {
-      id: orderId,
-      userId: user?.id,
-      items: items,
-      totalAmount: getTotalAmount(),
-      scheduledTime: selectedTime,
-      paymentMethod,
-      status: 'pendiente',
-      createdAt: new Date().toISOString(),
-      userCycle
-    };
+      if (orderError) throw orderError;
+      if (!order) throw new Error('No se pudo crear el pedido');
 
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    existingOrders.push(order);
-    localStorage.setItem('orders', JSON.stringify(existingOrders));
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        customizations: item.customizations
+      }));
 
-    clearCart();
-    setIsProcessing(false);
-    
-    addToast('¡Pedido realizado con éxito!', 'success');
-    navigate(`/order-confirmation/${orderId}`);
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Update product stock and log inventory changes
+      for (const item of items) {
+        // Get current stock
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('stock_quantity')
+          .eq('id', item.product.id)
+          .single();
+          
+        if (productError) throw productError;
+        
+        const newQuantity = (product?.stock_quantity || 0) - item.quantity;
+        
+        // Update stock
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ stock_quantity: newQuantity })
+          .eq('id', item.product.id);
+
+        if (updateError) throw updateError;
+        
+        // Log inventory change
+        const { error: logError } = await supabase
+          .from('inventory_logs')
+          .insert({
+            product_id: item.product.id,
+            change_type: 'sale',
+            quantity_change: -item.quantity,
+            previous_quantity: product?.stock_quantity || 0,
+            new_quantity: newQuantity,
+            reason: `Venta ${order.id}`,
+            created_by: user.id
+          });
+          
+        if (logError) throw logError;
+      }
+
+      clearCart();
+      addToast('¡Pedido realizado con éxito!', 'success');
+      navigate(`/order-confirmation/${order.id}`);
+    } catch (error) {
+      console.error('Error al crear el pedido:', error);
+      addToast('Error al procesar el pedido. Por favor, inténtalo de nuevo.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {

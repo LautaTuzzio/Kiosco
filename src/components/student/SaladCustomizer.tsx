@@ -1,7 +1,22 @@
 import React, { useState } from 'react';
 import { Product } from '../../types';
-import { CONDIMENTS } from '../../data/mockData';
 import { X, Check } from 'lucide-react';
+
+const CONDIMENTS = [
+  'Aceitunas',
+  'Aceite de Oliva',
+  'Aceto Balsámico',
+  'Semillas de Girasol',
+  'Semillas de Sésamo',
+  'Crutones',
+  'Queso Rayado',
+  'Salsa César',
+  'Salsa de Yogur',
+  'Mostaza y Miel',
+  'Jugo de Limón',
+  'Pimienta',
+  'Orégano'
+];
 
 interface SaladCustomizerProps {
   product: Product;

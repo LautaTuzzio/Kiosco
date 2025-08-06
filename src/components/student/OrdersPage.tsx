@@ -1,24 +1,130 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { ExpandableNavigation } from './ExpandableNavigation';
-import { Order } from '../../types';
+import { supabase } from '../../lib/supabase';
 import { generateOrderPDF } from '../../utils/pdfGenerator';
 import { Clock, Package, CheckCircle, XCircle, AlertCircle, Download, X, CreditCard, Calendar } from 'lucide-react';
+import { ReviewModal } from './ReviewModal';
+
+interface Order {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  scheduled_time: string;
+  payment_method: 'tarjeta' | 'mercadopago' | 'efectivo';
+  status: 'pendiente' | 'en_preparacion' | 'listo' | 'entregado' | 'cancelado';
+  created_at: string;
+  user_cycle: 'ciclo_basico' | 'ciclo_superior' | null;
+  notes: string | null;
+  items?: any[];
+}
 
 export const OrdersPage: React.FC = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [orderReviews, setOrderReviews] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    // Load orders from localStorage for demo
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const userOrders = allOrders.filter((order: Order) => order.userId === user?.id);
-    setOrders(userOrders.sort((a: Order, b: Order) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ));
+    if (user) {
+      loadOrders();
+    }
   }, [user]);
+
+  const loadOrders = async () => {
+    if (!user) return;
+
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            id,
+            quantity,
+            unit_price,
+            customizations,
+            products (
+              id,
+              name,
+              price,
+              description,
+              image_url
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading orders:', error);
+        return;
+      }
+
+      if (orders) {
+        // Transform the data to match the expected format
+        const transformedOrders = orders.map(order => ({
+          id: order.id,
+          userId: order.user_id,
+          totalAmount: order.total_amount,
+          scheduledTime: order.scheduled_time,
+          paymentMethod: order.payment_method,
+          status: order.status,
+          createdAt: order.created_at,
+          userCycle: order.user_cycle,
+          items: order.order_items?.map((item: any) => ({
+            product: {
+              id: item.products.id,
+              name: item.products.name,
+              price: item.products.price,
+              description: item.products.description,
+              image: item.products.image_url
+            },
+            quantity: item.quantity,
+            customizations: item.customizations
+          })) || []
+        }));
+
+        setOrders(transformedOrders);
+        
+        // Load reviews for these orders
+        if (transformedOrders.length > 0) {
+          loadOrderReviews(transformedOrders.map(o => o.id));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    }
+  };
+
+  const loadOrderReviews = async (orderIds: string[]) => {
+    if (orderIds.length === 0) return;
+    
+    try {
+      const { data: supabaseReviews, error } = await supabase
+        .from('reviews')
+        .select('order_id')
+        .in('order_id', orderIds)
+        .eq('user_id', user?.id);
+
+      if (error) {
+        console.error('Error loading reviews:', error);
+        return;
+      }
+
+      if (supabaseReviews) {
+        const reviewedOrders: Record<string, boolean> = {};
+        supabaseReviews.forEach(review => {
+          reviewedOrders[review.order_id] = true;
+        });
+        setOrderReviews(reviewedOrders);
+      }
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString()}`;
@@ -128,7 +234,26 @@ export const OrdersPage: React.FC = () => {
 
   const handleDownloadPDF = () => {
     if (selectedOrder && user) {
-      generateOrderPDF(selectedOrder, user.name);
+      // Convert to the format expected by generateOrderPDF
+      const pdfOrder = {
+        ...selectedOrder,
+        items: selectedOrder.items || []
+      };
+      generateOrderPDF(pdfOrder, user.name);
+    }
+  };
+
+  const handleReviewClick = (order: Order) => {
+    setSelectedOrder(order);
+    setShowReviewModal(true);
+  };
+
+  const handleReviewSubmitted = () => {
+    if (selectedOrder) {
+      setOrderReviews(prev => ({
+        ...prev,
+        [selectedOrder.id]: true
+      }));
     }
   };
 
@@ -199,6 +324,25 @@ export const OrdersPage: React.FC = () => {
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2">
                   <p className="text-xs text-green-800 font-medium text-center">
                     🎉 ¡Listo para retirar!
+                  </p>
+                </div>
+              )}
+
+              {order.status === 'entregado' && !orderReviews[order.id] && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => handleReviewClick(order)}
+                    className="w-full bg-yellow-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors"
+                  >
+                    ⭐ Calificar Pedido
+                  </button>
+                </div>
+              )}
+
+              {order.status === 'entregado' && orderReviews[order.id] && (
+                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                  <p className="text-xs text-gray-600 font-medium text-center">
+                    ✅ Reseña enviada
                   </p>
                 </div>
               )}
@@ -343,6 +487,19 @@ export const OrdersPage: React.FC = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && selectedOrder && (
+        <ReviewModal
+          order={selectedOrder}
+          isOpen={showReviewModal}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedOrder(null);
+          }}
+          onReviewSubmitted={handleReviewSubmitted}
+        />
       )}
     </div>
   );

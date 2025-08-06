@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Home, BarChart3, Package, Users, User } from 'lucide-react';
+import { Home, BarChart3, Package, Users, User, Star } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export const BottomNavigation: React.FC = () => {
@@ -20,11 +20,13 @@ export const Sidebar: React.FC = () => {
     { icon: Home, label: 'Panel Principal', path: '/kiosco/dashboard' },
     { icon: Package, label: 'Inventario', path: '/kiosco/inventory' },
     { icon: BarChart3, label: 'Análisis', path: '/kiosco/analytics' },
+    { icon: Star, label: 'Reseñas', path: '/kiosco/reviews' },
   ];
 
   const adminItems = [
     { icon: Users, label: 'Usuarios', path: '/admin/users' },
     { icon: BarChart3, label: 'Reportes', path: '/admin/reports' },
+    { icon: Star, label: 'Reseñas', path: '/admin/reviews' },
   ];
 
   const items = user.role === 'admin' ? adminItems : kioscoItems;

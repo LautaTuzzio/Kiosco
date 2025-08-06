@@ -19,6 +19,7 @@ import { ProfilePage } from './components/student/ProfilePage';
 import { KioscoDashboard } from './components/kiosco/KioscoDashboard';
 import { InventoryPage } from './components/kiosco/InventoryPage';
 import { AnalyticsPage } from './components/kiosco/AnalyticsPage';
+import { ReviewsPage } from './components/kiosco/ReviewsPage';
 
 // Admin Components
 import { UsersPage } from './components/admin/UsersPage';
@@ -130,6 +131,11 @@ const AppContent: React.FC = () => {
             <AnalyticsPage />
           </ProtectedRoute>
         } />
+        <Route path="/kiosco/reviews" element={
+          <ProtectedRoute allowedRoles={['kiosquero']}>
+            <ReviewsPage />
+          </ProtectedRoute>
+        } />
 
         {/* Admin Routes */}
         <Route path="/admin/users" element={
@@ -140,6 +146,11 @@ const AppContent: React.FC = () => {
         <Route path="/admin/reports" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <div className="ml-64 p-6">Reports Page (TODO)</div>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/reviews" element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <ReviewsPage />
           </ProtectedRoute>
         } />
 

@@ -1,21 +1,21 @@
-import jsPDF from 'jspdf'
-import { Order } from '../types'
+import jsPDF from 'jspdf';
+import { Order } from '../types';
 
 export const generateOrderPDF = (order: Order, userName: string) => {
   const doc = new jsPDF();
   
-  // Configurar colores para el diseño del comprobante
-  const primaryColor = [139, 69, 19] // Marron para el encabezado
-  const borderColor = [139, 69, 19] // Bordes marrones
-  const lightBrown = [245, 240, 230] // Fondo crema claro para encabezados de tabla
-  const textColor = [51, 51, 51] // Texto gris oscuro
-  const headerTextColor = [255, 255, 255] // Texto blanco para el encabezado
+  // Set up colors to match the receipt design
+  const primaryColor = [139, 69, 19]; // Brown header
+  const borderColor = [139, 69, 19]; // Brown borders
+  const lightBrown = [245, 240, 230]; // Light cream background for table headers
+  const textColor = [51, 51, 51]; // Dark gray text
+  const headerTextColor = [255, 255, 255]; // White text for header
   
-  // Seccion de encabezado con fondo marron
+  // Header section with brown background
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, 210, 45, 'F');
   
-  // Texto del encabezado - posicionado correctamente
+  // Header text - properly positioned
   doc.setTextColor(...headerTextColor);
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
@@ -31,12 +31,12 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   doc.setFont('helvetica', 'bold');
   doc.text('COMPROBANTE DE PEDIDO', 20, 60);
   
-  // Caja de detalles del pedido con borde
+  // Order details box with proper border
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(2);
-  doc.rect(20, 70, 170, 56); // Reduced height for tighter fit
+  doc.rect(20, 70, 170, 50);
   
-  // Contenido de detalles del pedido - con espaciado adecuado
+  // Order details content - properly spaced
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textColor);
@@ -44,89 +44,87 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   // Left column
   doc.text('Número de Pedido:', 25, 82);
   doc.setFont('helvetica', 'normal');
-  doc.text(order.id, 25, 89);
+  doc.text(order.id, 25, 90);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Cliente:', 25, 98);
+  doc.text('Cliente:', 25, 100);
   doc.setFont('helvetica', 'normal');
-  doc.text(userName, 25, 105);
+  doc.text(userName, 25, 108);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Fecha:', 25, 114);
+  doc.text('Fecha:', 25, 118);
   doc.setFont('helvetica', 'normal');
-  doc.text(new Date(order.createdAt).toLocaleDateString('es-AR'), 25, 121);
+  doc.text(new Date(order.createdAt).toLocaleDateString('es-AR'), 25, 126);
   
   // Right column
   doc.setFont('helvetica', 'bold');
   doc.text('Horario de Retiro:', 110, 82);
   doc.setFont('helvetica', 'normal');
-  doc.text(order.scheduledTime, 110, 89);
+  doc.text(order.scheduledTime, 110, 90);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Estado:', 110, 98);
+  doc.text('Estado:', 110, 100);
   doc.setFont('helvetica', 'normal');
   const statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', ' ');
-  doc.text(statusText, 110, 105);
+  doc.text(statusText, 110, 108);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Método de Pago:', 110, 114);
+  doc.text('Método de Pago:', 110, 118);
   doc.setFont('helvetica', 'normal');
   const paymentText = order.paymentMethod === 'tarjeta' ? 'Tarjeta de Crédito' : 
                      order.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Efectivo';
-  doc.text(paymentText, 110, 121);
+  doc.text(paymentText, 110, 126);
   
-  // Titulo de la seccion de productos
+  // Products section title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text('PRODUCTOS PEDIDOS', 20, 140);
+  doc.text('PRODUCTOS PEDIDOS', 20, 145);
   
-  // Encabezado de tabla con fondo
+  // Table header with background
   doc.setFillColor(...lightBrown);
-  doc.rect(20, 150, 170, 10, 'F');
+  doc.rect(20, 155, 170, 10, 'F');
   
-  // Bordes del encabezado de tabla
+  // Table header borders
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(1);
-  doc.rect(20, 150, 170, 10);
+  doc.rect(20, 155, 170, 10);
   
-  // Texto del encabezado de tabla
+  // Table header text
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textColor);
-  doc.text('Producto', 25, 157);
-  doc.text('Cant.', 120, 157);
-  doc.text('Precio Unit.', 140, 157);
-  doc.text('Subtotal', 170, 157);
+  doc.text('Producto', 25, 162);
+  doc.text('Cant.', 120, 162);
+  doc.text('Precio Unit.', 140, 162);
+  doc.text('Subtotal', 170, 162);
   
-  // Contenido de la tabla
-  let yPosition = 165.8; // Start right below the header
+  // Table content
+  let yPosition = 175;
   doc.setFont('helvetica', 'normal');
   
   order.items.forEach((item, index) => {
-    // Calcular altura de fila segun el contenido
-    let rowHeight = 12; // Reduced base row height
+    // Calculate row height based on content
+    let rowHeight = 12;
     let hasCustomizations = item.customizations && 
       ((item.customizations.ingredients && item.customizations.ingredients.length > 0) ||
        (item.customizations.condiments && item.customizations.condiments.length > 0));
     
     if (hasCustomizations) {
-      rowHeight += 4; // Minimal extra space for customizations
+      rowHeight += 8; // Extra space for customizations
     }
     
-    // Fondo alternado para filas
+    // Alternate row background
     if (index % 2 === 0) {
       doc.setFillColor(250, 250, 250);
       doc.rect(20, yPosition - 5, 170, rowHeight, 'F');
     }
     
-    // Borde de fila - sin borde inferior para mejor apariencia
+    // Row border
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.5);
     doc.rect(20, yPosition - 5, 170, rowHeight);
-    doc.setDrawColor(255, 255, 255); // Hide bottom border
-    doc.line(20, yPosition - 5 + rowHeight, 190, yPosition - 5 + rowHeight);
     
-    // Nombre del producto (recortar si es muy largo)
+    // Product name (truncate if too long)
     let productName = item.product.name;
     if (productName.length > 25) {
       productName = productName.substring(0, 22) + '...';
@@ -139,7 +137,7 @@ export const generateOrderPDF = (order: Order, userName: string) => {
     doc.text(`$${item.product.price.toLocaleString()}`, 145, yPosition);
     doc.text(`$${(item.product.price * item.quantity).toLocaleString()}`, 175, yPosition);
     
-    // Agregar personalizaciones si las hay
+    // Add customizations if any
     if (hasCustomizations) {
       yPosition += 8;
       doc.setFontSize(8);
@@ -168,8 +166,8 @@ export const generateOrderPDF = (order: Order, userName: string) => {
     yPosition += rowHeight;
   });
   
-  // Seccion de total con espaciado adecuado
-  yPosition += 5; // Reduced spacing before total line
+  // Total section with proper spacing
+  yPosition += 10;
   doc.setDrawColor(...primaryColor);
   doc.setLineWidth(2);
   doc.line(20, yPosition, 190, yPosition);
@@ -182,7 +180,7 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   doc.setFontSize(18);
   doc.text(`$${order.totalAmount.toLocaleString()}`, 170, yPosition);
   
-  // Seccion de pie de pagina
+  // Footer section
   yPosition += 25;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
@@ -195,8 +193,30 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   yPosition += 6;
   doc.text(`Generado el: ${new Date().toLocaleString('es-AR')}`, 20, yPosition);
   
-  // Seccion de codigo QR eliminada segun lo solicitado
+  // Simple QR code placeholder (properly sized and positioned)
+  const qrSize = 20;
+  const qrX = 165;
+  const qrY = yPosition - 25;
   
-  // Guardar el PDF con nombre de archivo apropiado
+  doc.setDrawColor(...borderColor);
+  doc.setLineWidth(1);
+  doc.rect(qrX, qrY, qrSize, qrSize);
+  
+  // QR code pattern simulation (simple grid)
+  doc.setFillColor(...textColor);
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      if ((i + j) % 2 === 0) {
+        doc.rect(qrX + 2 + (i * 4), qrY + 2 + (j * 4), 3, 3, 'F');
+      }
+    }
+  }
+  
+  doc.setFontSize(8);
+  doc.setTextColor(...textColor);
+  doc.text('QR Code', qrX + 2, qrY + qrSize + 5);
+  doc.text('(Pedido)', qrX + 2, qrY + qrSize + 10);
+  
+  // Save the PDF with proper filename
   doc.save(`comprobante-${order.id}.pdf`);
-}
+};

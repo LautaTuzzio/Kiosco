@@ -47,3 +47,15 @@ export interface Toast {
   message: string;
   type: 'success' | 'error' | 'info';
 }
+
+export interface Review {
+  id: string;
+  order_id: string;
+  user_id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  updated_at: string;
+  user_name?: string;
+  order_total?: number;
+}

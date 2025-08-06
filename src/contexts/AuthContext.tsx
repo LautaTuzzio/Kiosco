@@ -12,138 +12,150 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEMO_USERS: Array<User & { password: string }> = [
-  {
-    id: '1',
-    email: 'usuario@ciclobasico.com',
-    password: 'demo123',
-    role: 'ciclo_basico',
-    name: 'Estudiante Ciclo Básico'
-  },
-  {
-    id: '2',
-    email: 'usuario@ciclosuperior.com',
-    password: 'demo123',
-    role: 'ciclo_superior',
-    name: 'Estudiante Ciclo Superior'
-  },
-  {
-    id: '3',
-    email: 'usuario@kiosquero.com',
-    password: 'demo123',
-    role: 'kiosquero',
-    name: 'Encargado del Kiosco'
-  },
-  {
-    id: '4',
-    email: 'usuario@admin.com',
-    password: 'demo123',
-    role: 'admin',
-    name: 'Administrador'
-  }
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      setUser(userData);
-      // Set up a simple session for Supabase RLS
-      setupSupabaseSession(userData);
-    }
-    setIsLoading(false);
+    // Check for existing session
+    checkSession();
   }, []);
 
-  const setupSupabaseSession = async (userData: User) => {
+  const checkSession = async () => {
     try {
-      // Create a simple session token for demo purposes
-      // In production, this would be handled by proper Supabase auth
-      const sessionToken = btoa(JSON.stringify({ 
-        user_id: userData.id, 
-        role: userData.role,
-        email: userData.email 
-      }));
-      
-      // Store session info that can be used by RLS policies
-      localStorage.setItem('supabase_session', sessionToken);
+      const sessionData = sessionStorage.getItem('currentUser');
+      if (sessionData) {
+        const userData = JSON.parse(sessionData);
+        setUser(userData);
+      }
     } catch (error) {
-      console.error('Error setting up session:', error);
+      console.error('Error checking session:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const demoUser = DEMO_USERS.find(u => u.email === email && u.password === password);
-    
-    if (demoUser) {
-      const { password: _, ...userWithoutPassword } = demoUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-      await setupSupabaseSession(userWithoutPassword);
+    try {
+      // Query the database for user with matching email and password
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('id, email, name, role')
+        .eq('email', email)
+        .eq('password_hash', password); // In production, this should be properly hashed
+
+      if (error) {
+        console.error('Login error:', error);
+        setIsLoading(false);
+        return false;
+      }
+
+      if (users && users.length > 0) {
+        const userData: User = {
+          id: users[0].id,
+          email: users[0].email,
+          role: users[0].role as UserRole,
+          name: users[0].name
+        };
+        
+        setUser(userData);
+        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+        
+        // Update last login
+        await supabase
+          .from('users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', users[0].id);
+        
+        setIsLoading(false);
+        return true;
+      }
+      
       setIsLoading(false);
-      return true;
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
   const register = async (userData: any): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Check if email already exists
-    const existingUser = DEMO_USERS.find(u => u.email === userData.email);
-    if (existingUser) {
+    try {
+      // Check if email already exists
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', userData.email);
+
+      if (checkError) {
+        console.error('Error checking existing user:', checkError);
+        setIsLoading(false);
+        return false;
+      }
+
+      if (existingUsers && existingUsers.length > 0) {
+        console.error('Email already exists');
+        setIsLoading(false);
+        return false;
+      }
+
+      // Create new user
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert([
+          {
+            email: userData.email,
+            password_hash: userData.password, // In production, hash this properly
+            role: userData.role,
+            name: userData.name,
+            phone: userData.phone || null,
+            address: userData.address || null,
+            birth_date: userData.birthDate || null,
+            course: userData.course || null,
+            emergency_contact: userData.emergencyContact || null,
+            is_active: true
+          }
+        ])
+        .select('id, email, name, role')
+        .single();
+
+      if (insertError) {
+        console.error('Error creating user:', insertError);
+        setIsLoading(false);
+        return false;
+      }
+
+      if (newUser) {
+        const userObj: User = {
+          id: newUser.id,
+          email: newUser.email,
+          role: newUser.role as UserRole,
+          name: newUser.name
+        };
+        
+        setUser(userObj);
+        sessionStorage.setItem('currentUser', JSON.stringify(userObj));
+        setIsLoading(false);
+        return true;
+      }
+      
+      setIsLoading(false);
+      return false;
+    } catch (error) {
+      console.error('Registration error:', error);
       setIsLoading(false);
       return false;
     }
-    
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      email: userData.email,
-      role: userData.role,
-      name: userData.name
-    };
-    
-    // In a real app, you would save to database here
-    // For demo, we'll add to our demo users array and localStorage
-    DEMO_USERS.push({ ...newUser, password: userData.password });
-    
-    // Store additional profile data
-    const profileData = {
-      phone: userData.phone,
-      address: userData.address,
-      birthDate: userData.birthDate,
-      course: userData.course,
-      emergencyContact: userData.emergencyContact
-    };
-    localStorage.setItem(`profile_${newUser.id}`, JSON.stringify(profileData));
-    
-    // Auto-login the new user
-    setUser(newUser);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    await setupSupabaseSession(newUser);
-    
-    setIsLoading(false);
-    return true;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('supabase_session');
+    sessionStorage.removeItem('currentUser');
   };
 
   return (
