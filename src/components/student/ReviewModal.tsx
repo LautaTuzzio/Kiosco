@@ -27,36 +27,52 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
   if (!isOpen) return null;
 
-// In your ReviewModal.tsx, make sure the review submission looks like this:
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (rating === 0) {
+      addToast('Por favor selecciona una calificación', 'error');
+      return;
+    }
 
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('No user logged in');
+    if (!user) {
+      addToast('Debes estar logueado para dejar una reseña', 'error');
+      return;
+    }
 
-    const { error } = await supabase
-      .from('reviews')
-      .insert([{
-        order_id: orderId,
-        user_id: user.id,
-        rating: rating,
-        comment: comment
-      }]);
+    setIsSubmitting(true);
 
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .insert([
+          {
+            order_id: order.id,
+            user_id: user.id,
+            rating: rating,
+            comment: comment.trim() || null
+          }
+        ]);
 
-    onReviewSubmitted();
-    onClose();
-    addToast('¡Gracias por tu reseña!', 'success');
-  } catch (error) {
-    console.error('Error submitting review:', error);
-    addToast('Error al enviar la reseña', 'error');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      if (error) {
+        console.error('Error submitting review:', error);
+        addToast('Error al enviar la reseña', 'error');
+      } else {
+        addToast('¡Gracias por tu reseña!', 'success');
+        // Reset form and close
+        setRating(0);
+        setComment('');
+        onReviewSubmitted();
+        onClose();
+      }
+
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      addToast('Error al enviar la reseña', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleClose = () => {
     if (!isSubmitting) {
