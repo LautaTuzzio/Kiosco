@@ -1,36 +1,133 @@
 import React, { useState, useEffect } from 'react';
-import { Order } from '../../types';
 import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 import { Clock, Package, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+
+interface Order {
+  id: string;
+  user_id: string;
+  total_amount: number;
+  scheduled_time: string;
+  payment_method: 'tarjeta' | 'mercadopago' | 'efectivo';
+  status: 'pendiente' | 'en_preparacion' | 'listo' | 'entregado' | 'cancelado';
+  created_at: string;
+  user_cycle: 'ciclo_basico' | 'ciclo_superior' | null;
+  notes: string | null;
+  items?: any[];
+  user_name?: string;
+}
 
 export const KioscoDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string>('all');
   const { addToast } = useToast();
 
   const breakTimes = ['9:35', '11:55', '14:55', '17:15', '19:35'];
 
   useEffect(() => {
-    // Load orders from localStorage
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(allOrders.sort((a: Order, b: Order) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    ));
+    loadOrders();
   }, []);
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    const updatedOrders = orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    );
-    setOrders(updatedOrders);
-    localStorage.setItem('orders', JSON.stringify(updatedOrders));
-    
-    addToast(`Pedido ${orderId} actualizado a: ${newStatus}`, 'success');
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          users!inner(name),
+          order_items (
+            id,
+            quantity,
+            unit_price,
+            customizations,
+            products (
+              id,
+              name,
+              price,
+              description,
+              image_url
+            )
+          )
+        `)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading orders:', error);
+        addToast('Error al cargar pedidos', 'error');
+        return;
+      }
+
+      if (orders) {
+        // Transform the data to match the expected format
+        const transformedOrders = orders.map(order => ({
+          id: order.id,
+          user_id: order.user_id,
+          total_amount: order.total_amount,
+          scheduled_time: order.scheduled_time,
+          payment_method: order.payment_method,
+          status: order.status,
+          created_at: order.created_at,
+          user_cycle: order.user_cycle,
+          notes: order.notes,
+          user_name: Array.isArray(order.users) ? order.users[0]?.name : order.users?.name || 'Usuario',
+          items: order.order_items?.map((item: any) => ({
+            product: {
+              id: item.products.id,
+              name: item.products.name,
+              price: item.products.price,
+              description: item.products.description,
+              image: item.products.image_url
+            },
+            quantity: item.quantity,
+            customizations: item.customizations
+          })) || []
+        }));
+
+        setOrders(transformedOrders);
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      addToast('Error al cargar pedidos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+          ...(newStatus === 'entregado' ? { completed_at: new Date().toISOString() } : {})
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Error updating order status:', error);
+        addToast('Error al actualizar pedido', 'error');
+        return;
+      }
+
+      // Update local state
+      const updatedOrders = orders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      );
+      setOrders(updatedOrders);
+      
+      addToast(`Pedido ${orderId} actualizado a: ${newStatus.replace('_', ' ')}`, 'success');
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      addToast('Error al actualizar pedido', 'error');
+    }
   };
 
   const filteredOrders = orders.filter(order => {
     if (selectedTime === 'all') return true;
-    return order.scheduledTime === selectedTime;
+    return order.scheduled_time === selectedTime;
   });
 
   const formatPrice = (price: number) => {
@@ -38,9 +135,10 @@ export const KioscoDashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
+    return new Date(dateString).toLocaleString('es-AR', {
       day: '2-digit',
       month: '2-digit',
+      year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -88,6 +186,17 @@ export const KioscoDashboard: React.FC = () => {
         return '';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="ml-64 min-h-screen bg-cream-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando pedidos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ml-64 min-h-screen bg-cream-50">
@@ -155,21 +264,24 @@ export const KioscoDashboard: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      Pedido: {formatDate(order.createdAt)}
+                      Pedido: {formatDate(order.created_at)}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Retiro: <span className="font-medium">{order.scheduledTime}</span>
+                      Retiro: <span className="font-medium">{order.scheduled_time}</span>
                     </p>
                     <p className="text-sm text-gray-600">
-                      Ciclo: <span className="capitalize">{order.userCycle?.replace('_', ' ')}</span>
+                      Cliente: <span className="font-medium">{order.user_name}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Ciclo: <span className="capitalize">{order.user_cycle?.replace('_', ' ')}</span>
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-primary-600">
-                      {formatPrice(order.totalAmount)}
+                      {formatPrice(order.total_amount)}
                     </p>
                     <p className="text-sm text-gray-600 capitalize">
-                      {order.paymentMethod}
+                      {order.payment_method}
                     </p>
                   </div>
                 </div>
@@ -178,7 +290,7 @@ export const KioscoDashboard: React.FC = () => {
                 <div className="border-t border-gray-100 pt-4 mb-4">
                   <h4 className="font-medium text-gray-900 mb-2">Productos:</h4>
                   <div className="space-y-2">
-                    {order.items.map((item, index) => (
+                    {order.items?.map((item, index) => (
                       <div key={index} className="flex justify-between items-start">
                         <div className="flex-1">
                           <span className="font-medium">{item.product.name}</span>

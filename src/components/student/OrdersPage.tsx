@@ -331,7 +331,10 @@ export const OrdersPage: React.FC = () => {
               {order.status === 'entregado' && !orderReviews[order.id] && (
                 <div className="mt-3">
                   <button
-                    onClick={() => handleReviewClick(order)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReviewClick(order);
+                    }}
                     className="w-full bg-yellow-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors"
                   >
                     ⭐ Calificar Pedido

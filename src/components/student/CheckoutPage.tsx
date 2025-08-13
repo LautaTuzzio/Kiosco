@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { ExpandableNavigation } from './ExpandableNavigation';
 import { BREAK_TIMES } from '../../data/mockData';
@@ -34,34 +35,64 @@ export const CheckoutPage: React.FC = () => {
 
     setIsProcessing(true);
 
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Create order
-    const orderId = `ORD-${Date.now()}`;
-    
-    // Store order in localStorage for demo
-    const order = {
-      id: orderId,
-      userId: user?.id,
-      items: items,
-      totalAmount: getTotalAmount(),
-      scheduledTime: selectedTime,
-      paymentMethod,
-      status: 'pendiente',
-      createdAt: new Date().toISOString(),
-      userCycle
-    };
+      // Generate order ID
+      const orderId = `ORD-${Date.now()}`;
+      
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            id: orderId,
+            user_id: user?.id,
+            total_amount: getTotalAmount(),
+            scheduled_time: selectedTime,
+            payment_method: paymentMethod,
+            status: 'pendiente',
+            user_cycle: userCycle,
+            notes: null
+          }
+        ])
+        .select()
+        .single();
 
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    existingOrders.push(order);
-    localStorage.setItem('orders', JSON.stringify(existingOrders));
+      if (orderError) {
+        console.error('Error creating order:', orderError);
+        throw orderError;
+      }
 
-    clearCart();
-    setIsProcessing(false);
-    
-    addToast('¡Pedido realizado con éxito!', 'success');
-    navigate(`/order-confirmation/${orderId}`);
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: orderId,
+        product_id: item.product.id,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        customizations: item.customizations || null
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Error creating order items:', itemsError);
+        throw itemsError;
+      }
+
+      clearCart();
+      addToast('¡Pedido realizado con éxito!', 'success');
+      navigate(`/order-confirmation/${orderId}`);
+      
+    } catch (error) {
+      console.error('Error placing order:', error);
+      addToast('Error al procesar el pedido. Inténtalo de nuevo.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {
