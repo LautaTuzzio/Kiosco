@@ -236,6 +236,150 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          id: string
+          reason: string
+          reported_id: string | null
+          reporter_id: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          reason: string
+          reported_id?: string | null
+          reporter_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          id?: string
+          reason?: string
+          reported_id?: string | null
+          reporter_id?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reported_id_fkey"
+            columns: ["reported_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          product_id: string | null
+          rating: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          rating: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          product_id?: string | null
+          rating?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sanctions: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          duration_hours: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          reason: string
+          type: Database["public"]["Enums"]["sanction_type"]
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason: string
+          type: Database["public"]["Enums"]["sanction_type"]
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          duration_hours?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          reason?: string
+          type?: Database["public"]["Enums"]["sanction_type"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sanctions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sanctions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       users: {
         Row: {
           address: string | null
@@ -305,6 +449,8 @@ export type Database = {
       order_status: "pendiente" | "en_preparacion" | "listo" | "entregado" | "cancelado"
       payment_method: "tarjeta" | "mercadopago" | "efectivo"
       user_role: "ciclo_basico" | "ciclo_superior" | "kiosquero" | "admin"
+      report_status: "pending" | "reviewed" | "resolved"
+      sanction_type: "warning" | "timeout" | "ban"
     }
     CompositeTypes: {
       [_ in never]: never

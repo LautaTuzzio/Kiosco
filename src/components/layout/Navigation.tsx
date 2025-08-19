@@ -25,7 +25,7 @@ export const Sidebar: React.FC = () => {
 
   const adminItems = [
     { icon: Users, label: 'Usuarios', path: '/admin/users' },
-    { icon: BarChart3, label: 'Reportes', path: '/admin/reports' },
+    { icon: AlertTriangle, label: 'Reportes', path: '/admin/reports' },
     { icon: Star, label: 'Reseñas', path: '/admin/reviews' },
   ];
 

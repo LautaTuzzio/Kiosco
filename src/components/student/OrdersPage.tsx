@@ -3,8 +3,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ExpandableNavigation } from './ExpandableNavigation';
 import { supabase } from '../../lib/supabase';
 import { generateOrderPDF } from '../../utils/pdfGenerator';
-import { Clock, Package, CheckCircle, XCircle, AlertCircle, Download, X, CreditCard, Calendar } from 'lucide-react';
+import { Clock, Package, CheckCircle, XCircle, AlertCircle, Download, X, CreditCard, Calendar, AlertTriangle } from 'lucide-react';
 import { ReviewModal } from './ReviewModal';
+import { ReportModal } from '../common/ReportModal';
 
 interface Order {
   id: string;
@@ -25,6 +26,7 @@ export const OrdersPage: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [orderReviews, setOrderReviews] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -257,6 +259,12 @@ export const OrdersPage: React.FC = () => {
     }
   };
 
+  const handleReportKiosco = () => {
+    // For demo purposes, we'll use a fixed kiosquero ID
+    // In a real app, you'd get this from the order or system
+    setShowReportModal(true);
+  };
+
   if (orders.length === 0) {
     return (
       <div className="min-h-screen bg-cream-50 pl-16">
@@ -472,8 +480,15 @@ export const OrdersPage: React.FC = () => {
                     Descargar Comprobante
                   </button>
                   <button
+                    onClick={handleReportKiosco}
+                    className="px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Reportar problema con el kiosco"
+                  >
+                    <AlertTriangle className="h-5 w-5" />
+                  </button>
+                  <button
                     onClick={handleCloseModal}
-                    className="flex-1 bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                    className="bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
                   >
                     Cerrar
                   </button>
@@ -504,6 +519,15 @@ export const OrdersPage: React.FC = () => {
           onReviewSubmitted={handleReviewSubmitted}
         />
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportedUserId="kiosquero-demo-id" // In real app, get from order or system
+        reportedUserName="Kiosco Escolar"
+        reportedUserRole="kiosquero"
+      />
     </div>
   );
 };

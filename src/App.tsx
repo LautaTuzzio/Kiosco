@@ -23,6 +23,7 @@ import { ReviewsPage } from './components/kiosco/ReviewsPage';
 
 // Admin Components
 import { UsersPage } from './components/admin/UsersPage';
+import { ReportsPage } from './components/admin/ReportsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ 
   children, 
@@ -145,7 +146,7 @@ const AppContent: React.FC = () => {
         } />
         <Route path="/admin/reports" element={
           <ProtectedRoute allowedRoles={['admin']}>
-            <div className="ml-64 p-6">Reports Page (TODO)</div>
+            <ReportsPage />
           </ProtectedRoute>
         } />
         <Route path="/admin/reviews" element={

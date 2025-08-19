@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, User, Calendar, Package } from 'lucide-react';
+import { Star, MessageSquare, User, Calendar, Package, AlertTriangle } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Review } from '../../types';
+import { ReportModal } from '../common/ReportModal';
 
 export const ReviewsPage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRating, setSelectedRating] = useState<number | 'all'>('all');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{id: string, name: string, role: string} | null>(null);
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadReviews();
@@ -51,6 +56,11 @@ export const ReviewsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReportUser = (userId: string, userName: string) => {
+    setSelectedUser({ id: userId, name: userName, role: 'ciclo_basico' }); // Default role, could be enhanced
+    setShowReportModal(true);
   };
 
   const filteredReviews = reviews.filter(review => {
@@ -252,11 +262,20 @@ export const ReviewsPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="flex items-start space-x-3">
+                      <button
+                        onClick={() => handleReportUser(review.user_id, review.user_name || 'Usuario')}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                        title="Reportar usuario"
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                      </button>
+                      <div className="text-right">
                       <p className="text-sm text-gray-600">Pedido #{review.order_id}</p>
                       <p className="text-sm font-medium text-primary-600">
                         {formatPrice(review.order_total || 0)}
                       </p>
+                      </div>
                     </div>
                   </div>
 
@@ -278,6 +297,20 @@ export const ReviewsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && selectedUser && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => {
+            setShowReportModal(false);
+            setSelectedUser(null);
+          }}
+          reportedUserId={selectedUser.id}
+          reportedUserName={selectedUser.name}
+          reportedUserRole={selectedUser.role}
+        />
+      )}
     </div>
   );
 };

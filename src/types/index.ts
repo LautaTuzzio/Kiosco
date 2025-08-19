@@ -59,3 +59,33 @@ export interface Review {
   user_name?: string;
   order_total?: number;
 }
+
+export type ReportStatus = 'pending' | 'reviewed' | 'resolved';
+export type SanctionType = 'warning' | 'timeout' | 'ban';
+
+export interface Report {
+  id: string;
+  reporter_id: string;
+  reported_id: string;
+  reason: string;
+  status: ReportStatus;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  reporter_name?: string;
+  reported_name?: string;
+}
+
+export interface Sanction {
+  id: string;
+  user_id: string;
+  type: SanctionType;
+  reason: string;
+  duration_hours?: number;
+  expires_at?: string;
+  created_by: string;
+  created_at: string;
+  is_active: boolean;
+  user_name?: string;
+  admin_name?: string;
+}

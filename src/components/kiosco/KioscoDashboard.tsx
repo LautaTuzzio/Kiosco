@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Clock, Package, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { ReportModal } from '../common/ReportModal';
 
 interface Order {
   id: string;
@@ -21,7 +23,10 @@ export const KioscoDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string>('all');
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{id: string, name: string, role: string} | null>(null);
   const { addToast } = useToast();
+  const { user } = useAuth();
 
   const breakTimes = ['9:35', '11:55', '14:55', '17:15', '19:35'];
 
@@ -187,6 +192,11 @@ export const KioscoDashboard: React.FC = () => {
     }
   };
 
+  const handleReportUser = (userId: string, userName: string, userRole: string) => {
+    setSelectedUser({ id: userId, name: userName, role: userRole });
+    setShowReportModal(true);
+  };
+
   if (loading) {
     return (
       <div className="ml-64 min-h-screen bg-cream-50 flex items-center justify-center">
@@ -269,9 +279,16 @@ export const KioscoDashboard: React.FC = () => {
                     <p className="text-sm text-gray-600">
                       Retiro: <span className="font-medium">{order.scheduled_time}</span>
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Cliente: <span className="font-medium">{order.user_name}</span>
-                    </p>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span>Cliente: <span className="font-medium">{order.user_name}</span></span>
+                      <button
+                        onClick={() => handleReportUser(order.user_id, order.user_name || 'Usuario', order.user_cycle || 'ciclo_basico')}
+                        className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                        title="Reportar cliente"
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                      </button>
+                    </div>
                     <p className="text-sm text-gray-600">
                       Ciclo: <span className="capitalize">{order.user_cycle?.replace('_', ' ')}</span>
                     </p>
@@ -339,6 +356,20 @@ export const KioscoDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && selectedUser && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => {
+            setShowReportModal(false);
+            setSelectedUser(null);
+          }}
+          reportedUserId={selectedUser.id}
+          reportedUserName={selectedUser.name}
+          reportedUserRole={selectedUser.role}
+        />
+      )}
     </div>
   );
 };
