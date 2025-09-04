@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole } from '../types';
 import { supabase } from '../lib/supabase';
+import { BannedPage } from '../components/auth/BannedPage';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeSanction, setActiveSanction] = useState<any>(null);
 
   useEffect(() => {
     // Check for existing session
@@ -32,6 +34,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error checking session:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const checkActiveSanctions = async (userId: string) => {
+    try {
+      const { data: sanctions, error } = await supabase
+        .from('sanctions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error checking sanctions:', error);
+        return null;
+      }
+
+      return sanctions && sanctions.length > 0 ? sanctions[0] : null;
+    } catch (error) {
+      console.error('Error checking sanctions:', error);
+      return null;
     }
   };
 
@@ -60,7 +85,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: users[0].name
         };
         
+        // Check for active sanctions before allowing login
+        const activeSanction = await checkActiveSanctions(users[0].id);
+        
+        if (activeSanction && (activeSanction.type === 'ban' || activeSanction.type === 'timeout')) {
+          setActiveSanction(activeSanction);
+          setIsLoading(false);
+          return true; // Return true to indicate successful login, but user will see banned page
+        }
+        
         setUser(userData);
+        setActiveSanction(null);
         sessionStorage.setItem('currentUser', JSON.stringify(userData));
         
         // Update last login
@@ -155,8 +190,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
+    setActiveSanction(null);
     sessionStorage.removeItem('currentUser');
   };
+
+  // If user has active sanction, show banned page
+  if (activeSanction && !isLoading) {
+    return <BannedPage sanction={activeSanction} onLogout={logout} />;
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>

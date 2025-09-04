@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Home, BarChart3, Package, Users, User, Star } from 'lucide-react';
+import { Home, BarChart3, Package, Users, User, Star, AlertTriangle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export const BottomNavigation: React.FC = () => {

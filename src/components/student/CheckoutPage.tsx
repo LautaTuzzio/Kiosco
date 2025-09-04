@@ -83,6 +83,50 @@ export const CheckoutPage: React.FC = () => {
         throw itemsError;
       }
 
+      // Decrement stock immediately when order is placed
+      for (const item of items) {
+        // First get current stock
+        const { data: productData, error: fetchError } = await supabase
+          .from('products')
+          .select('stock_quantity')
+          .eq('id', item.product.id)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching product stock:', fetchError);
+          continue;
+        }
+
+        // Calculate new stock
+        const newStock = (productData.stock_quantity || 0) - item.quantity;
+        
+        // Update stock
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ 
+            stock_quantity: newStock
+          })
+          .eq('id', item.product.id);
+
+        if (stockError) {
+          console.error('Error updating stock:', stockError);
+          // Continue with order creation even if stock update fails
+        }
+
+        // Log inventory change
+        await supabase
+          .from('inventory_logs')
+          .insert([{
+            product_id: item.product.id,
+            change_type: 'sale',
+            quantity_change: -item.quantity,
+            previous_quantity: 0, // Will be updated by trigger if needed
+            new_quantity: 0, // Will be updated by trigger if needed
+            reason: `Venta - Pedido ${orderId}`,
+            created_by: user?.id
+          }]);
+      }
+
       clearCart();
       addToast('¡Pedido realizado con éxito!', 'success');
       navigate(`/order-confirmation/${orderId}`);

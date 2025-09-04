@@ -1,18 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { Order } from '../../types';
+import { useToast } from '../../contexts/ToastContext';
+import { supabase } from '../../lib/supabase';
 import { TrendingUp, DollarSign, Package, Clock } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export const AnalyticsPage: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('day');
+  const { addToast } = useToast();
 
   useEffect(() => {
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(allOrders);
+    loadAnalyticsData();
   }, []);
+
+  const loadAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            quantity,
+            unit_price,
+            products (name)
+          )
+        `)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading analytics:', error);
+        addToast('Error al cargar análisis', 'error');
+        return;
+      }
+
+      if (orders) {
+        setOrders(orders);
+      }
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      addToast('Error al cargar análisis', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString()}`;
+  };
+
+  // Prepare data for trends chart
+  const prepareTrendsData = () => {
+    const dailyData: { [key: string]: { orders: number; revenue: number; date: string } } = {};
+    
+    orders.forEach(order => {
+      const dateObj = new Date(order.created_at);
+      const date = dateObj.toLocaleDateString('es-AR', {
+        day: '2-digit',
+        month: '2-digit'
+      });
+      const sortKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD for sorting
+      
+      if (!dailyData[date]) {
+        dailyData[date] = { orders: 0, revenue: 0, date: sortKey };
+      }
+      dailyData[date].orders += 1;
+      dailyData[date].revenue += order.total_amount;
+    });
+
+    return Object.entries(dailyData)
+      .map(([displayDate, data]) => ({
+        date: displayDate,
+        orders: data.orders,
+        revenue: data.revenue,
+        sortKey: data.date
+      }))
+      .sort((a, b) => new Date(a.sortKey).getTime() - new Date(b.sortKey).getTime())
+      .slice(-7); // Last 7 days
   };
 
   // Calculate metrics
@@ -22,13 +87,13 @@ export const AnalyticsPage: React.FC = () => {
   
   // Product sales analysis
   const productSales = orders.reduce((acc, order) => {
-    order.items.forEach(item => {
-      const productName = item.product.name;
+    order.order_items?.forEach((item: any) => {
+      const productName = item.products?.name;
       if (!acc[productName]) {
         acc[productName] = { quantity: 0, revenue: 0 };
       }
       acc[productName].quantity += item.quantity;
-      acc[productName].revenue += item.product.price * item.quantity;
+      acc[productName].revenue += item.unit_price * item.quantity;
     });
     return acc;
   }, {} as Record<string, { quantity: number; revenue: number }>);
@@ -39,14 +104,16 @@ export const AnalyticsPage: React.FC = () => {
 
   // Time analysis
   const timeAnalysis = orders.reduce((acc, order) => {
-    const time = order.scheduledTime;
+    const time = order.scheduled_time;
     if (!acc[time]) {
       acc[time] = { orders: 0, revenue: 0 };
     }
     acc[time].orders += 1;
-    acc[time].revenue += order.totalAmount;
+    acc[time].revenue += order.total_amount;
     return acc;
   }, {} as Record<string, { orders: number; revenue: number }>);
+
+  const trendsData = prepareTrendsData();
 
   const MetricCard: React.FC<{
     title: string;
@@ -66,6 +133,17 @@ export const AnalyticsPage: React.FC = () => {
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="ml-64 min-h-screen bg-cream-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando análisis...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ml-64 min-h-screen bg-cream-50">
@@ -125,6 +203,62 @@ export const AnalyticsPage: React.FC = () => {
           />
         </div>
 
+        {/* Trends Chart */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendencia de Ventas (Últimos 7 días)</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trendsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis yAxisId="orders" orientation="left" />
+                <YAxis yAxisId="revenue" orientation="right" />
+                <Tooltip 
+                  formatter={(value, name) => [
+                    name === 'orders' ? value : formatPrice(Number(value)),
+                    name === 'orders' ? 'Pedidos' : 'Ingresos'
+                  ]}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                />
+                <Line 
+                  yAxisId="orders"
+                  type="monotone" 
+                  dataKey="orders" 
+                  stroke="#3B82F6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                  name="orders"
+                />
+                <Line 
+                  yAxisId="revenue"
+                  type="monotone" 
+                  dataKey="revenue" 
+                  stroke="#10B981" 
+                  strokeWidth={3}
+                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                  name="revenue"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center mt-4 space-x-6">
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
+              <span className="text-sm text-gray-600">Pedidos</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
+              <span className="text-sm text-gray-600">Ingresos</span>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Top Products */}
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -171,14 +305,6 @@ export const AnalyticsPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* Chart Placeholder */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendencia de Ventas</h3>
-          <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Gráfico de tendencias (implementación futura)</p>
           </div>
         </div>
       </div>
