@@ -196,7 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // If user has active sanction, show banned page
   if (activeSanction && !isLoading) {
-    return <BannedPage sanction={activeSanction} onLogout={logout} />;
+    return <BannedPage sanction={activeSanction} />;
   }
 
   return (

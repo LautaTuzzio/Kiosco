@@ -209,21 +209,21 @@ export const KioscoDashboard: React.FC = () => {
   }
 
   return (
-    <div className="ml-64 min-h-screen bg-cream-50">
-      <div className="p-6">
+    <div className="ml-56 sm:ml-64 min-h-screen bg-cream-50">
+      <div className="p-3 sm:p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Panel de Órdenes</h1>
-          <p className="text-gray-600">Gestiona los pedidos del kiosco</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Panel de Órdenes</h1>
+          <p className="text-sm sm:text-base text-gray-600">Gestiona los pedidos del kiosco</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium text-gray-700">Filtrar por recreo:</span>
-            <div className="flex space-x-2">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Filtrar por recreo:</span>
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedTime('all')}
-                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                   selectedTime === 'all'
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -235,7 +235,7 @@ export const KioscoDashboard: React.FC = () => {
                 <button
                   key={time}
                   onClick={() => setSelectedTime(time)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                     selectedTime === time
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -249,22 +249,22 @@ export const KioscoDashboard: React.FC = () => {
         </div>
 
         {/* Orders List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 text-center">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">No hay pedidos para mostrar</p>
             </div>
           ) : (
             filteredOrders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div key={order.id} className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 space-y-2 sm:space-y-0">
                   <div>
                     <div className="flex items-center mb-2">
-                      <span className="text-xl font-bold text-primary-600 mr-3">
+                      <span className="text-lg sm:text-xl font-bold text-primary-600 mr-2 sm:mr-3">
                         {order.id}
                       </span>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
+                      <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(order.status)}`}>
                         {order.status === 'pendiente' && <Clock className="h-4 w-4 mr-1" />}
                         {order.status === 'en_preparacion' && <Package className="h-4 w-4 mr-1" />}
                         {order.status === 'listo' && <CheckCircle className="h-4 w-4 mr-1" />}
@@ -273,31 +273,31 @@ export const KioscoDashboard: React.FC = () => {
                         {order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', ' ')}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Pedido: {formatDate(order.created_at)}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Retiro: <span className="font-medium">{order.scheduled_time}</span>
                     </p>
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600">
                       <span>Cliente: <span className="font-medium">{order.user_name}</span></span>
                       <button
                         onClick={() => handleReportUser(order.user_id, order.user_name || 'Usuario', order.user_cycle || 'ciclo_basico')}
-                        className="ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                        className="ml-1 sm:ml-2 p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
                         title="Reportar cliente"
                       >
-                        <AlertTriangle className="h-3 w-3" />
+                        <AlertTriangle className="h-3 w-3 sm:h-3 sm:w-3" />
                       </button>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       Ciclo: <span className="capitalize">{order.user_cycle?.replace('_', ' ')}</span>
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary-600">
+                  <div className="text-left sm:text-right">
+                    <p className="text-base sm:text-lg font-bold text-primary-600">
                       {formatPrice(order.total_amount)}
                     </p>
-                    <p className="text-sm text-gray-600 capitalize">
+                    <p className="text-xs sm:text-sm text-gray-600 capitalize">
                       {order.payment_method}
                     </p>
                   </div>
@@ -305,15 +305,15 @@ export const KioscoDashboard: React.FC = () => {
 
                 {/* Order Items */}
                 <div className="border-t border-gray-100 pt-4 mb-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Productos:</h4>
+                  <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-2">Productos:</h4>
                   <div className="space-y-2">
                     {order.items?.map((item, index) => (
                       <div key={index} className="flex justify-between items-start">
                         <div className="flex-1">
-                          <span className="font-medium">{item.product.name}</span>
-                          <span className="text-gray-600 ml-2">x{item.quantity}</span>
+                          <span className="text-sm sm:text-base font-medium">{item.product.name}</span>
+                          <span className="text-xs sm:text-sm text-gray-600 ml-2">x{item.quantity}</span>
                           {item.customizations && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            <div className="text-xs sm:text-sm text-gray-600 mt-1">
                               {item.customizations.ingredients && (
                                 <p><strong>Ingredientes:</strong> {item.customizations.ingredients.join(', ')}</p>
                               )}
@@ -323,7 +323,7 @@ export const KioscoDashboard: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <span className="text-primary-600 font-medium">
+                        <span className="text-sm sm:text-base text-primary-600 font-medium">
                           {formatPrice(item.product.price * item.quantity)}
                         </span>
                       </div>
@@ -332,11 +332,11 @@ export const KioscoDashboard: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex space-x-3">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                   {order.status !== 'entregado' && order.status !== 'cancelado' && (
                     <button
                       onClick={() => updateOrderStatus(order.id, getNextStatus(order.status))}
-                      className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                      className="bg-primary-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base"
                     >
                       {getActionText(order.status)}
                     </button>
@@ -345,7 +345,7 @@ export const KioscoDashboard: React.FC = () => {
                   {order.status !== 'entregado' && order.status !== 'cancelado' && (
                     <button
                       onClick={() => updateOrderStatus(order.id, 'cancelado')}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                      className="bg-red-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base"
                     >
                       Cancelar
                     </button>

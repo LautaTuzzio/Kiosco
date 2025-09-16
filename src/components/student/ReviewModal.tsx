@@ -85,10 +85,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl max-w-md w-full">
-          <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Calificar Pedido</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+        <div className="bg-white rounded-xl max-w-md w-full mx-2 sm:mx-0 max-h-[95vh] overflow-y-auto">
+          <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Calificar Pedido</h2>
             <button
               onClick={handleClose}
               disabled={isSubmitting}
@@ -98,9 +98,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                 Pedido #{order.id}
               </h3>
               <p className="text-sm text-gray-600">
@@ -112,10 +112,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                 ¿Cómo calificarías tu experiencia? *
               </label>
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center justify-center space-x-1 sm:space-x-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
@@ -124,10 +124,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                     onMouseEnter={() => setHoveredRating(star)}
                     onMouseLeave={() => setHoveredRating(0)}
                     disabled={isSubmitting}
-                    className="p-1 transition-colors disabled:opacity-50"
+                    className="p-0.5 sm:p-1 transition-colors disabled:opacity-50"
                   >
                     <Star
-                      className={`h-8 w-8 ${
+                      className={`h-6 w-6 sm:h-8 sm:w-8 ${
                         star <= (hoveredRating || rating)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
@@ -136,7 +136,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   </button>
                 ))}
               </div>
-              <div className="mt-2 text-sm text-gray-600">
+              <div className="mt-2 text-sm text-gray-600 text-center">
                 {rating === 1 && 'Muy malo'}
                 {rating === 2 && 'Malo'}
                 {rating === 3 && 'Regular'}
@@ -153,7 +153,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none disabled:opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none disabled:opacity-50 text-sm sm:text-base"
                 rows={4}
                 placeholder="Cuéntanos sobre tu experiencia..."
                 maxLength={500}
@@ -163,19 +163,19 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
               </div>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 py-2 sm:py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm sm:text-base"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || rating === 0}
-                className="flex-1 py-3 px-4 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 py-2 sm:py-3 px-4 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Reseña'}
               </button>

@@ -85,26 +85,10 @@ export const CheckoutPage: React.FC = () => {
 
       // Decrement stock immediately when order is placed
       for (const item of items) {
-        // First get current stock
-        const { data: productData, error: fetchError } = await supabase
-          .from('products')
-          .select('stock_quantity')
-          .eq('id', item.product.id)
-          .single();
-
-        if (fetchError) {
-          console.error('Error fetching product stock:', fetchError);
-          continue;
-        }
-
-        // Calculate new stock
-        const newStock = (productData.stock_quantity || 0) - item.quantity;
-        
-        // Update stock
         const { error: stockError } = await supabase
           .from('products')
           .update({ 
-            stock_quantity: newStock
+            stock_quantity: supabase.raw(`stock_quantity - ${item.quantity}`)
           })
           .eq('id', item.product.id);
 

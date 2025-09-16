@@ -286,50 +286,50 @@ export const OrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pl-16">
+    <div className="min-h-screen bg-cream-50 pl-12 sm:pl-16">
       <ExpandableNavigation />
       
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Mis Pedidos</h1>
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Mis Pedidos</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {orders.map((order) => (
             <div 
               key={order.id} 
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100 p-4"
+              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-gray-100 p-3 sm:p-4"
               onClick={() => handleOrderClick(order)}
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 space-y-2 sm:space-y-0">
                 <div>
-                  <h3 className="font-bold text-primary-600 text-lg">{order.id}</h3>
-                  <div className="flex items-center text-sm text-gray-600 mt-1">
-                    <Calendar className="h-3 w-3 mr-1" />
+                  <h3 className="font-bold text-primary-600 text-base sm:text-lg">{order.id}</h3>
+                  <div className="flex items-center text-xs sm:text-sm text-gray-600 mt-1">
+                    <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
                     <span>{formatDate(order.createdAt)} - {formatTime(order.createdAt)}</span>
                   </div>
                 </div>
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border self-start ${getStatusColor(order.status)}`}>
                   {getStatusIcon(order.status)}
                   <span className="ml-1">{getStatusText(order.status)}</span>
                 </span>
               </div>
 
-              <div className="space-y-2 mb-3">
-                <div className="flex items-center justify-between text-sm">
+              <div className="space-y-1 sm:space-y-2 mb-3">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Retiro:</span>
                   <span className="font-medium">{order.scheduledTime}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Total:</span>
-                  <span className="font-bold text-primary-600">{formatPrice(order.totalAmount)}</span>
+                  <span className="font-bold text-primary-600 text-sm sm:text-base">{formatPrice(order.totalAmount)}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Productos:</span>
                   <span className="font-medium">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
 
               {order.status === 'listo' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-3">
                   <p className="text-xs text-green-800 font-medium text-center">
                     🎉 ¡Listo para retirar!
                   </p>
@@ -343,7 +343,7 @@ export const OrdersPage: React.FC = () => {
                       e.stopPropagation();
                       handleReviewClick(order);
                     }}
-                    className="w-full bg-yellow-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors"
+                    className="w-full bg-yellow-500 text-white py-1.5 sm:py-2 px-3 rounded-lg text-xs sm:text-sm font-medium hover:bg-yellow-600 transition-colors"
                   >
                     ⭐ Calificar Pedido
                   </button>
@@ -351,14 +351,14 @@ export const OrdersPage: React.FC = () => {
               )}
 
               {order.status === 'entregado' && orderReviews[order.id] && (
-                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-2">
+                <div className="mt-3 bg-gray-50 border border-gray-200 rounded-lg p-1.5 sm:p-2">
                   <p className="text-xs text-gray-600 font-medium text-center">
                     ✅ Reseña enviada
                   </p>
                 </div>
               )}
 
-              <div className="mt-3 pt-3 border-t border-gray-100">
+              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100">
                 <p className="text-xs text-gray-500 text-center">
                   Toca para ver detalles
                 </p>

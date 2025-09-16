@@ -256,93 +256,93 @@ export const ReportsPage: React.FC = () => {
   }
 
   return (
-    <div className="ml-64 min-h-screen bg-cream-50">
-      <div className="p-6">
+    <div className="ml-56 sm:ml-64 min-h-screen bg-cream-50">
+      <div className="p-3 sm:p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Gestión de Reportes</h1>
-          <p className="text-gray-600">Administra reportes de usuarios y sanciones</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Gestión de Reportes</h1>
+          <p className="text-sm sm:text-base text-gray-600">Administra reportes de usuarios y sanciones</p>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
             <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Reportes Pendientes</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
+              <div className="ml-2 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Reportes Pendientes</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {reports.filter(r => r.status === 'pending').length}
                 </p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
             <div className="flex items-center">
-              <Eye className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">En Revisión</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <Eye className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+              <div className="ml-2 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">En Revisión</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {reports.filter(r => r.status === 'reviewed').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
             <div className="flex items-center">
-              <Check className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Resueltos</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <Check className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <div className="ml-2 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Resueltos</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">
                   {reports.filter(r => r.status === 'resolved').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
             <div className="flex items-center">
-              <X className="h-8 w-8 text-red-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Sanciones Activas</p>
-                <p className="text-2xl font-bold text-gray-900">{sanctions.length}</p>
+              <X className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+              <div className="ml-2 sm:ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Sanciones Activas</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900">{sanctions.length}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Reports List */}
           <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Reportes</h2>
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Reportes</h2>
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto">
               {reports.length === 0 ? (
-                <div className="p-6 text-center">
+                <div className="p-4 sm:p-6 text-center">
                   <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No hay reportes</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
                   {reports.map((report) => (
-                    <div key={report.id} className="p-4 hover:bg-gray-50">
+                    <div key={report.id} className="p-3 sm:p-4 hover:bg-gray-50">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center mb-1">
-                            <User className="h-4 w-4 text-gray-400 mr-1" />
-                            <span className="text-sm font-medium text-gray-900">
+                            <User className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 mr-1" />
+                            <span className="text-xs sm:text-sm font-medium text-gray-900">
                               {report.reporter_name} → {report.reported_name}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{report.reason}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">{report.reason}</p>
                           <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="h-3 w-3 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span>{formatDate(report.created_at)}</span>
                           </div>
                         </div>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(report.status)}`}>
+                        <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full border flex-shrink-0 ${getStatusColor(report.status)}`}>
                           {report.status === 'pending' && 'Pendiente'}
                           {report.status === 'reviewed' && 'En Revisión'}
                           {report.status === 'resolved' && 'Resuelto'}
@@ -350,10 +350,10 @@ export const ReportsPage: React.FC = () => {
                       </div>
                       
                       {report.status === 'pending' && (
-                        <div className="flex space-x-2 mt-3">
+                        <div className="flex flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-3">
                           <button
                             onClick={() => updateReportStatus(report.id, 'reviewed')}
-                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
+                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex-shrink-0"
                           >
                             Revisar
                           </button>
@@ -362,13 +362,13 @@ export const ReportsPage: React.FC = () => {
                               setSelectedReport(report);
                               setShowSanctionModal(true);
                             }}
-                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 flex-shrink-0"
                           >
                             Sancionar
                           </button>
                           <button
                             onClick={() => updateReportStatus(report.id, 'resolved', 'Resuelto sin acción')}
-                            className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
+                            className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 flex-shrink-0"
                           >
                             Resolver
                           </button>
@@ -383,30 +383,30 @@ export const ReportsPage: React.FC = () => {
 
           {/* Active Sanctions */}
           <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Sanciones Activas</h2>
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Sanciones Activas</h2>
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-80 sm:max-h-96 overflow-y-auto">
               {sanctions.length === 0 ? (
-                <div className="p-6 text-center">
+                <div className="p-4 sm:p-6 text-center">
                   <Check className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No hay sanciones activas</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200">
                   {sanctions.map((sanction) => (
-                    <div key={sanction.id} className="p-4">
+                    <div key={sanction.id} className="p-3 sm:p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center mb-1">
-                            <User className="h-4 w-4 text-gray-400 mr-1" />
-                            <span className="text-sm font-medium text-gray-900">
+                            <User className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 mr-1" />
+                            <span className="text-xs sm:text-sm font-medium text-gray-900">
                               {sanction.user_name}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-1">{sanction.reason}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1 line-clamp-2">{sanction.reason}</p>
                           <div className="flex items-center text-xs text-gray-500 mb-1">
-                            <Calendar className="h-3 w-3 mr-1" />
+                            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span>Por: {sanction.admin_name}</span>
                           </div>
                           {sanction.expires_at && (
@@ -415,13 +415,13 @@ export const ReportsPage: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <div className="flex flex-col items-end space-y-2">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getSanctionColor(sanction.type)}`}>
+                        <div className="flex flex-col items-end space-y-1 sm:space-y-2 flex-shrink-0">
+                          <span className={`inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full border ${getSanctionColor(sanction.type)}`}>
                             {getSanctionText(sanction.type)}
                           </span>
                           <button
                             onClick={() => removeSanction(sanction.id)}
-                            className="text-xs text-red-600 hover:text-red-800"
+                            className="text-xs text-red-600 hover:text-red-800 px-1"
                           >
                             Remover
                           </button>
@@ -440,16 +440,16 @@ export const ReportsPage: React.FC = () => {
       {showSanctionModal && selectedReport && (
         <>
           <div className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl max-w-md w-full">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">Aplicar Sanción</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-xl max-w-md w-full mx-2 sm:mx-0 max-h-[95vh] overflow-y-auto">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Aplicar Sanción</h2>
                 <p className="text-sm text-gray-600 mt-1">
                   Usuario: {selectedReport.reported_name}
                 </p>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de Sanción
@@ -457,7 +457,7 @@ export const ReportsPage: React.FC = () => {
                   <select
                     value={sanctionForm.type}
                     onChange={(e) => setSanctionForm({ ...sanctionForm, type: e.target.value as SanctionType })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm sm:text-base"
                   >
                     <option value="warning">Advertencia</option>
                     <option value="timeout">Suspensión Temporal</option>
@@ -474,7 +474,7 @@ export const ReportsPage: React.FC = () => {
                       type="number"
                       value={sanctionForm.duration_hours}
                       onChange={(e) => setSanctionForm({ ...sanctionForm, duration_hours: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm sm:text-base"
                       min="0"
                     />
                   </div>
@@ -487,7 +487,7 @@ export const ReportsPage: React.FC = () => {
                   <textarea
                     value={sanctionForm.reason}
                     onChange={(e) => setSanctionForm({ ...sanctionForm, reason: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm sm:text-base"
                     rows={3}
                     placeholder="Describe la razón de la sanción..."
                   />
@@ -500,14 +500,14 @@ export const ReportsPage: React.FC = () => {
                   <textarea
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm sm:text-base"
                     rows={2}
                     placeholder="Notas internas sobre la resolución..."
                   />
                 </div>
               </div>
 
-              <div className="p-6 border-t border-gray-200 flex space-x-3">
+              <div className="p-4 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <button
                   onClick={() => {
                     setShowSanctionModal(false);
@@ -515,14 +515,14 @@ export const ReportsPage: React.FC = () => {
                     setSanctionForm({ type: 'warning', reason: '', duration_hours: 24 });
                     setAdminNotes('');
                   }}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm sm:text-base"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={createSanction}
                   disabled={!sanctionForm.reason.trim()}
-                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm sm:text-base"
                 >
                   Aplicar Sanción
                 </button>

@@ -121,14 +121,14 @@ export const AnalyticsPage: React.FC = () => {
     icon: React.ReactNode;
     color: string;
   }> = ({ title, value, icon, color }) => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-3 sm:p-6">
       <div className="flex items-center">
-        <div className={`flex-shrink-0 p-3 ${color} rounded-lg`}>
+        <div className={`flex-shrink-0 p-2 sm:p-3 ${color} rounded-lg`}>
           {icon}
         </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <div className="ml-2 sm:ml-4 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{value}</p>
         </div>
       </div>
     </div>
@@ -146,23 +146,23 @@ export const AnalyticsPage: React.FC = () => {
   }
 
   return (
-    <div className="ml-64 min-h-screen bg-cream-50">
-      <div className="p-6">
+    <div className="ml-56 sm:ml-64 min-h-screen bg-cream-50">
+      <div className="p-3 sm:p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics</h1>
-          <p className="text-gray-600">Análisis de ventas y rendimiento del kiosco</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Analytics</h1>
+          <p className="text-sm sm:text-base text-gray-600">Análisis de ventas y rendimiento del kiosco</p>
         </div>
 
         {/* Period Filter */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium text-gray-700">Período:</span>
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Período:</span>
             <div className="flex space-x-2">
               {['day', 'week', 'month'].map((period) => (
                 <button
                   key={period}
                   onClick={() => setSelectedPeriod(period as any)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${
                     selectedPeriod === period
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -176,46 +176,46 @@ export const AnalyticsPage: React.FC = () => {
         </div>
 
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <MetricCard
             title="Total de Pedidos"
             value={totalOrders.toString()}
-            icon={<Package className="h-6 w-6 text-white" />}
+            icon={<Package className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
             color="bg-blue-600"
           />
           <MetricCard
             title="Ingresos Totales"
             value={formatPrice(totalRevenue)}
-            icon={<DollarSign className="h-6 w-6 text-white" />}
+            icon={<DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
             color="bg-green-600"
           />
           <MetricCard
             title="Valor Promedio"
             value={formatPrice(averageOrderValue)}
-            icon={<TrendingUp className="h-6 w-6 text-white" />}
+            icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
             color="bg-purple-600"
           />
           <MetricCard
             title="Pedidos Activos"
             value={orders.filter(o => ['pendiente', 'en_preparacion', 'listo'].includes(o.status)).length.toString()}
-            icon={<Clock className="h-6 w-6 text-white" />}
+            icon={<Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
             color="bg-orange-600"
           />
         </div>
 
         {/* Trends Chart */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tendencia de Ventas (Últimos 7 días)</h3>
-          <div className="h-80">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Tendencia de Ventas (Últimos 7 días)</h3>
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendsData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="date" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
-                  height={60}
+                  height={50}
                 />
                 <YAxis yAxisId="orders" orientation="left" />
                 <YAxis yAxisId="revenue" orientation="right" />
@@ -247,35 +247,35 @@ export const AnalyticsPage: React.FC = () => {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center mt-4 space-x-6">
+          <div className="flex justify-center mt-3 sm:mt-4 space-x-4 sm:space-x-6">
             <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-              <span className="text-sm text-gray-600">Pedidos</span>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded mr-1 sm:mr-2"></div>
+              <span className="text-xs sm:text-sm text-gray-600">Pedidos</span>
             </div>
             <div className="flex items-center">
-              <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
-              <span className="text-sm text-gray-600">Ingresos</span>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded mr-1 sm:mr-2"></div>
+              <span className="text-xs sm:text-sm text-gray-600">Ingresos</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Top Products */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Productos Más Vendidos</h3>
-            <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Productos Más Vendidos</h3>
+            <div className="space-y-3 sm:space-y-4">
               {topProducts.map(([productName, data], index) => (
                 <div key={productName} className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <span className="flex items-center justify-center w-8 h-8 bg-primary-100 text-primary-600 rounded-full text-sm font-medium mr-3">
+                    <span className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 bg-primary-100 text-primary-600 rounded-full text-xs sm:text-sm font-medium mr-2 sm:mr-3 flex-shrink-0">
                       {index + 1}
                     </span>
-                    <div>
-                      <p className="font-medium text-gray-900">{productName}</p>
-                      <p className="text-sm text-gray-600">{data.quantity} unidades</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{productName}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{data.quantity} unidades</p>
                     </div>
                   </div>
-                  <span className="font-medium text-primary-600">
+                  <span className="font-medium text-primary-600 text-sm sm:text-base flex-shrink-0">
                     {formatPrice(data.revenue)}
                   </span>
                 </div>
@@ -284,22 +284,22 @@ export const AnalyticsPage: React.FC = () => {
           </div>
 
           {/* Time Analysis */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ventas por Horario</h3>
-            <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Ventas por Horario</h3>
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(timeAnalysis)
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([time, data]) => (
                 <div key={time} className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <span className="flex items-center justify-center w-12 h-8 bg-blue-100 text-blue-600 rounded text-sm font-medium mr-3">
+                    <span className="flex items-center justify-center w-10 h-6 sm:w-12 sm:h-8 bg-blue-100 text-blue-600 rounded text-xs sm:text-sm font-medium mr-2 sm:mr-3 flex-shrink-0">
                       {time}
                     </span>
                     <div>
-                      <p className="font-medium text-gray-900">{data.orders} pedidos</p>
+                      <p className="font-medium text-gray-900 text-sm sm:text-base">{data.orders} pedidos</p>
                     </div>
                   </div>
-                  <span className="font-medium text-blue-600">
+                  <span className="font-medium text-blue-600 text-sm sm:text-base flex-shrink-0">
                     {formatPrice(data.revenue)}
                   </span>
                 </div>

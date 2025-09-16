@@ -90,18 +90,18 @@ export const MenuPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pl-16">
+    <div className="min-h-screen bg-cream-50 pl-12 sm:pl-16">
       {/* Expandable Navigation */}
       <ExpandableNavigation />
 
       {/* Floating Cart Button */}
       <button
         onClick={() => setIsCartOpen(true)}
-        className="fixed bottom-6 right-6 bg-primary-600 text-white p-4 rounded-full hover:bg-primary-700 transition-colors shadow-lg z-30"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-primary-600 text-white p-3 sm:p-4 rounded-full hover:bg-primary-700 transition-colors shadow-lg z-30"
       >
-        <ShoppingCart className="h-6 w-6" />
+        <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
         {getTotalItems() > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
+          <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center font-medium">
             {getTotalItems()}
           </span>
         )}
@@ -109,30 +109,30 @@ export const MenuPage: React.FC = () => {
 
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Menú del Kiosco</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Menú del Kiosco</h1>
           </div>
 
           {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <div className="relative mb-3 sm:mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
             />
           </div>
 
           {/* Categories */}
-          <div className="flex space-x-2 overflow-x-auto pb-2">
+          <div className="flex space-x-2 overflow-x-auto pb-2 -mx-1">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                   selectedCategory === category.id
                     ? 'bg-primary-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -146,15 +146,15 @@ export const MenuPage: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={convertProduct(product)} />
           ))}
         </div>
 
         {filteredProducts.length === 0 && !loading && (
-          <div className="text-center py-12">
+          <div className="text-center py-8 sm:py-12">
             <p className="text-gray-500">No se encontraron productos</p>
           </div>
         )}
