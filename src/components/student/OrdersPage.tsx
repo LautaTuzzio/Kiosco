@@ -39,6 +39,11 @@ export const OrdersPage: React.FC = () => {
     if (!user) return;
 
     try {
+      // Calculate date 7 days ago
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const sevenDaysAgoISO = sevenDaysAgo.toISOString();
+
       const { data: orders, error } = await supabase
         .from('orders')
         .select(`
@@ -58,6 +63,7 @@ export const OrdersPage: React.FC = () => {
           )
         `)
         .eq('user_id', user.id)
+        .gte('created_at', sevenDaysAgoISO) // Only show orders from last 7 days
         .order('created_at', { ascending: false });
 
       if (error) {

@@ -82,7 +82,7 @@ export const AnalyticsPage: React.FC = () => {
 
   // Calculate metrics
   const totalOrders = orders.length;
-  const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   
   // Product sales analysis

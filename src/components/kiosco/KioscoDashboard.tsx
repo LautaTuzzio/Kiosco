@@ -37,6 +37,7 @@ export const KioscoDashboard: React.FC = () => {
   const loadOrders = async () => {
     try {
       setLoading(true);
+      // Kiosquero and admin can see all orders regardless of date
       const { data: orders, error } = await supabase
         .from('orders')
         .select(`
