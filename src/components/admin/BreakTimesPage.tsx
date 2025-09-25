@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Clock, Plus, CreditCard as Edit, Trash2, Save, X } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 
