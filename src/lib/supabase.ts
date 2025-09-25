@@ -45,3 +45,36 @@ export const updateDailyAnalytics = async () => {
   const { error } = await supabase.rpc('update_daily_analytics');
   if (error) throw error;
 };
+
+// Break times helpers
+export const getBreakTimes = async (cycle: 'ciclo_basico' | 'ciclo_superior') => {
+  const { data, error } = await supabase
+    .from('break_times_config')
+    .select('break_time')
+    .eq('cycle', cycle)
+    .eq('is_active', true)
+    .order('break_time');
+
+  if (error) {
+    console.error('Error loading break times:', error);
+    // Fallback to hardcoded times
+    const { FALLBACK_BREAK_TIMES } = await import('../data/mockData');
+    return FALLBACK_BREAK_TIMES[cycle];
+  }
+
+  return data?.map(item => item.break_time) || [];
+};
+
+// Auto-assign cycle based on course
+export const getCycleFromCourse = (course: string): 'ciclo_basico' | 'ciclo_superior' => {
+  const courseNumber = parseInt(course.charAt(0));
+  
+  if (courseNumber >= 1 && courseNumber <= 3) {
+    return 'ciclo_basico';
+  } else if (courseNumber >= 4 && courseNumber <= 7) {
+    return 'ciclo_superior';
+  }
+  
+  // Default fallback
+  return 'ciclo_basico';
+};

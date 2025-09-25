@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { getCycleFromCourse } from '../../lib/supabase';
 import { Coffee, Mail, Lock, User, Phone, MapPin, Calendar, GraduationCap, Users } from 'lucide-react';
 
 interface RegisterFormProps {
@@ -19,7 +20,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
     birthDate: '',
     course: '',
     emergencyContact: '',
-    role: 'ciclo_basico' as 'ciclo_basico' | 'ciclo_superior'
+    role: 'ciclo_basico' as 'ciclo_basico' | 'ciclo_superior',
+    autoAssignedCycle: true
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -59,7 +61,19 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Auto-assign cycle when course changes
+    if (name === 'course' && value) {
+      const autoAssignedCycle = getCycleFromCourse(value);
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: value,
+        role: autoAssignedCycle,
+        autoAssignedCycle: true
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -178,18 +192,33 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ciclo *
+                    Ciclo {formData.autoAssignedCycle && formData.course && '(Asignado automáticamente)'}
                   </label>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
-                    required
-                  >
-                    <option value="ciclo_basico">Ciclo Básico (1°, 2°, 3°)</option>
-                    <option value="ciclo_superior">Ciclo Superior (4°, 5°, 6°)</option>
-                  </select>
+                  {formData.autoAssignedCycle && formData.course ? (
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
+                      <span className="text-gray-700">
+                        {formData.role === 'ciclo_basico' ? 'Ciclo Básico (1°, 2°, 3°)' : 'Ciclo Superior (4°, 5°, 6°, 7°)'}
+                      </span>
+                    </div>
+                  ) : (
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={(e) => {
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          role: e.target.value as 'ciclo_basico' | 'ciclo_superior',
+                          autoAssignedCycle: false
+                        }));
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors"
+                      required
+                    >
+                      <option value="ciclo_basico">Ciclo Básico (1°, 2°, 3°)</option>
+                      <option value="ciclo_superior">Ciclo Superior (4°, 5°, 6°, 7°)</option>
+                      <option value="7° Año">7° Año</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>

@@ -5,7 +5,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { ExpandableNavigation } from './ExpandableNavigation';
-import { BREAK_TIMES } from '../../data/mockData';
+import { getBreakTimes } from '../../lib/supabase';
 import { CreditCard, Smartphone, DollarSign, Clock, ArrowLeft } from 'lucide-react';
 
 export const CheckoutPage: React.FC = () => {
@@ -17,9 +17,30 @@ export const CheckoutPage: React.FC = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'tarjeta' | 'mercadopago' | 'efectivo'>('tarjeta');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [loadingTimes, setLoadingTimes] = useState(true);
 
   const userCycle = user?.role as 'ciclo_basico' | 'ciclo_superior';
-  const availableTimes = BREAK_TIMES[userCycle] || [];
+
+  React.useEffect(() => {
+    const loadBreakTimes = async () => {
+      if (userCycle) {
+        setLoadingTimes(true);
+        try {
+          const times = await getBreakTimes(userCycle);
+          setAvailableTimes(times);
+        } catch (error) {
+          console.error('Error loading break times:', error);
+          // Fallback to empty array
+          setAvailableTimes([]);
+        } finally {
+          setLoadingTimes(false);
+        }
+      }
+    };
+
+    loadBreakTimes();
+  }, [userCycle]);
 
   const formatPrice = (price: number) => {
     return `$${price.toLocaleString()}`;
@@ -193,22 +214,33 @@ export const CheckoutPage: React.FC = () => {
               <Clock className="h-5 w-5 mr-2" />
               Horario de Retiro
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {availableTimes.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => setSelectedTime(time)}
-                  className={`p-3 rounded-lg border text-center transition-colors ${
-                    selectedTime === time
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+            {loadingTimes ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Cargando horarios...</p>
+              </div>
+            ) : availableTimes.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3">
+                {availableTimes.map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={() => setSelectedTime(time)}
+                    className={`p-3 rounded-lg border text-center transition-colors ${
+                      selectedTime === time
+                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500">No hay horarios disponibles</p>
+              </div>
+            )}
           </div>
 
           {/* Payment Method */}

@@ -42,6 +42,33 @@ export type Database = {
         }
         Relationships: []
       }
+      break_times_config: {
+        Row: {
+          break_time: string
+          created_at: string | null
+          cycle: Database["public"]["Enums"]["user_role"]
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          break_time: string
+          created_at?: string | null
+          cycle: Database["public"]["Enums"]["user_role"]
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          break_time?: string
+          created_at?: string | null
+          cycle?: Database["public"]["Enums"]["user_role"]
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory_logs: {
         Row: {
           change_type: string
