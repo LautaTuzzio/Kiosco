@@ -1,18 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { ExpandableNavigation } from './ExpandableNavigation';
 import { generateOrderPDF } from '../../utils/pdfGenerator';
+import { supabase } from '../../lib/supabase';
 import { CheckCircle, Download, Clock, CreditCard, ArrowLeft } from 'lucide-react';
 
 export const OrderConfirmationPage: React.FC = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Get order from localStorage for demo
-  const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-  const order = orders.find((o: any) => o.id === orderId);
+  useEffect(() => {
+    const loadOrder = async () => {
+      if (!orderId) return;
+
+      try {
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', orderId)
+          .single();
+
+        if (orderError) throw orderError;
+
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('order_items')
+          .select(`
+            *,
+            products (*)
+          `)
+          .eq('order_id', orderId);
+
+        if (itemsError) throw itemsError;
+
+        const formattedOrder = {
+          id: orderData.id,
+          scheduledTime: orderData.scheduled_time,
+          paymentMethod: orderData.payment_method,
+          totalAmount: orderData.total_amount,
+          status: orderData.status,
+          items: itemsData.map(item => ({
+            product: item.products,
+            quantity: item.quantity,
+            customizations: item.customizations
+          }))
+        };
+
+        setOrder(formattedOrder);
+      } catch (error) {
+        console.error('Error loading order:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-cream-50 pl-16">
+        <ExpandableNavigation />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -20,7 +77,11 @@ export const OrderConfirmationPage: React.FC = () => {
         <ExpandableNavigation />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-gray-500 mb-4">Pedido no encontrado</p>
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Gracias por tu pedido!</h2>
+            <p className="text-gray-600 mb-6">
+              Tu pedido ha sido procesado exitosamente
+            </p>
             <button
               onClick={() => navigate('/menu')}
               className="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors"
