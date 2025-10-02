@@ -106,30 +106,40 @@ export const CheckoutPage: React.FC = () => {
 
       // Decrement stock immediately when order is placed
       for (const item of items) {
-        const { error: stockError } = await supabase
+        // First get current stock
+        const { data: productData } = await supabase
           .from('products')
-          .update({ 
-            stock_quantity: supabase.raw(`stock_quantity - ${item.quantity}`)
-          })
-          .eq('id', item.product.id);
+          .select('stock_quantity')
+          .eq('id', item.product.id)
+          .single();
 
-        if (stockError) {
-          console.error('Error updating stock:', stockError);
-          // Continue with order creation even if stock update fails
+        if (productData) {
+          const newStock = productData.stock_quantity - item.quantity;
+
+          const { error: stockError } = await supabase
+            .from('products')
+            .update({
+              stock_quantity: newStock
+            })
+            .eq('id', item.product.id);
+
+          if (stockError) {
+            console.error('Error updating stock:', stockError);
+          }
+
+          // Log inventory change
+          await supabase
+            .from('inventory_logs')
+            .insert([{
+              product_id: item.product.id,
+              change_type: 'sale',
+              quantity_change: -item.quantity,
+              previous_quantity: productData.stock_quantity,
+              new_quantity: newStock,
+              reason: `Venta - Pedido ${orderId}`,
+              created_by: user?.id
+            }]);
         }
-
-        // Log inventory change
-        await supabase
-          .from('inventory_logs')
-          .insert([{
-            product_id: item.product.id,
-            change_type: 'sale',
-            quantity_change: -item.quantity,
-            previous_quantity: 0, // Will be updated by trigger if needed
-            new_quantity: 0, // Will be updated by trigger if needed
-            reason: `Venta - Pedido ${orderId}`,
-            created_by: user?.id
-          }]);
       }
 
       clearCart();
