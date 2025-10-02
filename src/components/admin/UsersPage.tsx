@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, UserPlus, Edit, Trash2, Save, X } from 'lucide-react';
+import { Users, UserPlus, Edit, Trash2, Save, X, Ban } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -10,6 +10,13 @@ export const UsersPage: React.FC = () => {
   const [editingUser, setEditingUser] = React.useState<string | null>(null);
   const [editForm, setEditForm] = React.useState<any>({});
   const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showSanctionModal, setShowSanctionModal] = React.useState(false);
+  const [selectedUserForSanction, setSelectedUserForSanction] = React.useState<any>(null);
+  const [sanctionForm, setSanctionForm] = React.useState({
+    type: 'warning' as 'warning' | 'timeout' | 'ban',
+    reason: '',
+    duration_hours: 24
+  });
   const [newUser, setNewUser] = React.useState({
     name: '',
     email: '',
@@ -137,7 +144,7 @@ export const UsersPage: React.FC = () => {
             name: newUser.name,
             email: newUser.email,
             role: newUser.role,
-            password_hash: newUser.password, // In production, hash properly
+            password_hash: newUser.password,
             is_active: true
           }
         ])
@@ -156,6 +163,60 @@ export const UsersPage: React.FC = () => {
     } catch (error) {
       console.error('Error creating user:', error);
       addToast('Error al crear usuario', 'error');
+    }
+  };
+
+  const handleOpenSanctionModal = (user: any) => {
+    setSelectedUserForSanction(user);
+    setSanctionForm({
+      type: 'warning',
+      reason: '',
+      duration_hours: 24
+    });
+    setShowSanctionModal(true);
+  };
+
+  const handleApplySanction = async () => {
+    if (!sanctionForm.reason.trim()) {
+      addToast('Por favor ingresa una razón para la sanción', 'error');
+      return;
+    }
+
+    if (!selectedUserForSanction) return;
+
+    try {
+      let expiresAt = null;
+      if (sanctionForm.type === 'timeout' && sanctionForm.duration_hours) {
+        const expireDate = new Date();
+        expireDate.setHours(expireDate.getHours() + sanctionForm.duration_hours);
+        expiresAt = expireDate.toISOString();
+      }
+
+      const { error } = await supabase
+        .from('sanctions')
+        .insert([
+          {
+            user_id: selectedUserForSanction.id,
+            type: sanctionForm.type,
+            reason: sanctionForm.reason,
+            duration_hours: sanctionForm.type === 'timeout' ? sanctionForm.duration_hours : null,
+            expires_at: expiresAt,
+            created_by: currentUser?.id,
+            is_active: true
+          }
+        ]);
+
+      if (error) {
+        console.error('Error applying sanction:', error);
+        addToast('Error al aplicar sanción', 'error');
+      } else {
+        addToast('Sanción aplicada correctamente', 'success');
+        setShowSanctionModal(false);
+        setSelectedUserForSanction(null);
+      }
+    } catch (error) {
+      console.error('Error applying sanction:', error);
+      addToast('Error al aplicar sanción', 'error');
     }
   };
 
@@ -366,13 +427,23 @@ export const UsersPage: React.FC = () => {
                           <button
                             onClick={() => handleEditUser(user)}
                             className="text-primary-600 hover:text-primary-900"
+                            title="Editar usuario"
                           >
                             <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenSanctionModal(user)}
+                            className="text-orange-600 hover:text-orange-900"
+                            disabled={user.id === currentUser?.id}
+                            title="Sancionar usuario"
+                          >
+                            <Ban className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-600 hover:text-red-900"
                             disabled={user.id === currentUser?.id}
+                            title="Eliminar usuario"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -396,7 +467,7 @@ export const UsersPage: React.FC = () => {
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">Agregar Nuevo Usuario</h2>
               </div>
-              
+
               <div className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -407,7 +478,7 @@ export const UsersPage: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                   <input
@@ -417,7 +488,7 @@ export const UsersPage: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
                   <select
@@ -431,7 +502,7 @@ export const UsersPage: React.FC = () => {
                     <option value="admin">Administrador</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
                   <input
@@ -442,7 +513,7 @@ export const UsersPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="p-6 border-t border-gray-200 flex space-x-3">
                 <button
                   onClick={handleAddUser}
@@ -452,6 +523,75 @@ export const UsersPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowAddModal(false)}
+                  className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Sanction Modal */}
+      {showSanctionModal && selectedUserForSanction && (
+        <>
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setShowSanctionModal(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl max-w-md w-full">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">Sancionar Usuario</h2>
+                <p className="text-sm text-gray-600 mt-1">Usuario: {selectedUserForSanction.name}</p>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Sanción</label>
+                  <select
+                    value={sanctionForm.type}
+                    onChange={(e) => setSanctionForm({ ...sanctionForm, type: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="warning">Advertencia</option>
+                    <option value="timeout">Suspensión Temporal</option>
+                    <option value="ban">Ban Permanente</option>
+                  </select>
+                </div>
+
+                {sanctionForm.type === 'timeout' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Duración (horas)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={sanctionForm.duration_hours}
+                      onChange={(e) => setSanctionForm({ ...sanctionForm, duration_hours: parseInt(e.target.value) || 24 })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Razón de la Sanción</label>
+                  <textarea
+                    value={sanctionForm.reason}
+                    onChange={(e) => setSanctionForm({ ...sanctionForm, reason: e.target.value })}
+                    rows={4}
+                    placeholder="Describe el motivo de la sanción..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200 flex space-x-3">
+                <button
+                  onClick={handleApplySanction}
+                  className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Aplicar Sanción
+                </button>
+                <button
+                  onClick={() => setShowSanctionModal(false)}
                   className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   Cancelar

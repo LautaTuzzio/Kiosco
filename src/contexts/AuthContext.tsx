@@ -87,23 +87,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Check for active sanctions before allowing login
         const activeSanction = await checkActiveSanctions(users[0].id);
-        
-        if (activeSanction && (activeSanction.type === 'ban' || activeSanction.type === 'timeout')) {
-          setActiveSanction(activeSanction);
-          setIsLoading(false);
-          return true; // Return true to indicate successful login, but user will see banned page
+
+        if (activeSanction) {
+          if (activeSanction.type === 'ban' || activeSanction.type === 'timeout') {
+            setActiveSanction(activeSanction);
+            setIsLoading(false);
+            return true;
+          }
         }
-        
+
         setUser(userData);
         setActiveSanction(null);
         sessionStorage.setItem('currentUser', JSON.stringify(userData));
-        
+
         // Update last login
         await supabase
           .from('users')
           .update({ last_login: new Date().toISOString() })
           .eq('id', users[0].id);
-        
+
         setIsLoading(false);
         return true;
       }
