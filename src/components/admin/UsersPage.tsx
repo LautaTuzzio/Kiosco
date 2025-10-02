@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, UserPlus, Edit, Trash2, Save, X, Ban } from 'lucide-react';
+import { Users, UserPlus, CreditCard as Edit, Trash2, Save, X, Ban } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
