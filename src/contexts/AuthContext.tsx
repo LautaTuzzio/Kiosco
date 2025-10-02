@@ -6,7 +6,6 @@ import { BannedPage } from '../components/auth/BannedPage';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: any) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -119,77 +118,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (userData: any): Promise<boolean> => {
-    setIsLoading(true);
-    
-    try {
-      // Check if email already exists
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('users')
-        .select('email')
-        .eq('email', userData.email);
-
-      if (checkError) {
-        console.error('Error checking existing user:', checkError);
-        setIsLoading(false);
-        return false;
-      }
-
-      if (existingUsers && existingUsers.length > 0) {
-        console.error('Email already exists');
-        setIsLoading(false);
-        return false;
-      }
-
-      // Create new user
-      const { data: newUser, error: insertError } = await supabase
-        .from('users')
-        .insert([
-          {
-            email: userData.email,
-            password_hash: userData.password, // In production, hash this properly
-            role: userData.role,
-            name: userData.name,
-            phone: userData.phone || null,
-            address: userData.address || null,
-            birth_date: userData.birthDate || null,
-            course: userData.course || null,
-            emergency_contact: userData.emergencyContact || null,
-            is_active: true
-          }
-        ])
-        .select('id, email, name, role')
-        .single();
-
-      if (insertError) {
-        console.error('Error creating user:', insertError);
-        setIsLoading(false);
-        return false;
-      }
-
-      if (newUser) {
-        const userObj: User = {
-          id: newUser.id,
-          email: newUser.email,
-          role: newUser.role as UserRole,
-          name: newUser.name
-        };
-        
-        setUser(userObj);
-        sessionStorage.setItem('currentUser', JSON.stringify(userObj));
-        setIsLoading(false);
-        return true;
-      }
-      
-      setIsLoading(false);
-      return false;
-    } catch (error) {
-      console.error('Registration error:', error);
-      setIsLoading(false);
-      return false;
-    }
-  };
-
   const logout = () => {
     setUser(null);
     setActiveSanction(null);
@@ -202,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

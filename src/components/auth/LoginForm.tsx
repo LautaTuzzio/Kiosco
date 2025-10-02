@@ -4,11 +4,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { Coffee, Mail, Lock } from 'lucide-react';
 
-interface LoginFormProps {
-  onSwitchToRegister: () => void;
-}
-
-export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, isLoading } = useAuth();
@@ -88,18 +84,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
               {isLoading ? <LoadingSpinner size="sm" color="text-white" /> : 'Iniciar Sesión'}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              ¿No tienes una cuenta?{' '}
-              <button
-                onClick={onSwitchToRegister}
-                className="text-primary-600 hover:text-primary-700 font-medium"
-              >
-                Crear Cuenta
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>
