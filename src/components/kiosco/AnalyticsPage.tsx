@@ -184,7 +184,7 @@ export const AnalyticsPage: React.FC = () => {
     <div className="ml-56 sm:ml-64 min-h-screen bg-cream-50">
       <div className="p-3 sm:p-6">
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Análisis</h1>
           <p className="text-sm sm:text-base text-gray-600">Análisis de ventas y rendimiento del kiosco</p>
         </div>
 
@@ -203,7 +203,7 @@ export const AnalyticsPage: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {period === 'day' ? 'Hoy' : period === 'week' ? 'Semana' : 'Mes'}
+                  {period === 'day' ? 'Hoy' : period === 'week' ? '7 Días' : '30 Días'}
                 </button>
               ))}
             </div>
@@ -241,7 +241,7 @@ export const AnalyticsPage: React.FC = () => {
         {/* Trends Chart */}
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-            Tendencia de Ventas ({selectedPeriod === 'day' ? 'Hoy' : selectedPeriod === 'week' ? 'Última Semana' : 'Último Mes'})
+            Tendencia de Ventas ({selectedPeriod === 'day' ? 'Hoy' : selectedPeriod === 'week' ? 'Últimos 7 Días' : 'Últimos 30 Días'})
           </h3>
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
