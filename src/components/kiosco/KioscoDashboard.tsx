@@ -37,7 +37,16 @@ export const KioscoDashboard: React.FC = () => {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      // Kiosquero and admin can see all orders regardless of date
+      // Get today's date range (start and end of day in local timezone)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const todayEnd = tomorrow.toISOString();
+      
+      // Only load today's orders
       const { data: orders, error } = await supabase
         .from('orders')
         .select(`
@@ -57,6 +66,8 @@ export const KioscoDashboard: React.FC = () => {
             )
           )
         `)
+        .gte('created_at', todayStart)
+        .lt('created_at', todayEnd)
         .order('created_at', { ascending: true });
 
       if (error) {

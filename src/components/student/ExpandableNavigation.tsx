@@ -93,17 +93,6 @@ export const ExpandableNavigation: React.FC = () => {
           </button>
         </div>
 
-        {/* User Info at Bottom (when expanded) */}
-        {isExpanded && (
-          <div className="absolute bottom-12 sm:bottom-16 left-2 right-2 sm:left-4 sm:right-4">
-            <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-              <p className="text-xs text-gray-600">Conectado como:</p>
-              <p className="text-xs sm:text-sm font-medium text-gray-900 capitalize truncate">
-                {user.role.replace('_', ' ')}
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

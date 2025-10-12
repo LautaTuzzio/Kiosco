@@ -287,21 +287,12 @@ export const ProfilePage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Fecha de Nacimiento
                     </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        value={formData.birthDate}
-                        onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-900">
-                          {formData.birthDate ? new Date(formData.birthDate).toLocaleDateString('es-AR') : 'No especificado'}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      <span className="text-gray-900">
+                        {formData.birthDate ? new Date(formData.birthDate).toLocaleDateString('es-AR') : 'No especificado'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="md:col-span-2">
@@ -336,23 +327,7 @@ export const ProfilePage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Curso
                   </label>
-                  {isEditing ? (
-                    <select
-                      value={formData.course}
-                      onChange={(e) => setFormData({ ...formData, course: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    >
-                      <option value="">Selecciona tu curso</option>
-                      <option value="1° Año">1° Año</option>
-                      <option value="2° Año">2° Año</option>
-                      <option value="3° Año">3° Año</option>
-                      <option value="4° Año">4° Año</option>
-                      <option value="5° Año">5° Año</option>
-                      <option value="6° Año">6° Año</option>
-                    </select>
-                  ) : (
-                    <span className="text-gray-900">{formData.course || 'No especificado'}</span>
-                  )}
+                  <span className="text-gray-900">{formData.course || 'No especificado'}</span>
                 </div>
 
                 <div>
@@ -421,31 +396,6 @@ export const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
-              
-              <div className="space-y-3">
-                <button 
-                  onClick={() => window.location.href = '/orders'}
-                  className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Ver Historial Completo</div>
-                  <div className="text-sm text-gray-600">Todos tus pedidos anteriores</div>
-                </button>
-
-                <button className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="font-medium text-gray-900">Configurar Notificaciones</div>
-                  <div className="text-sm text-gray-600">Personaliza tus alertas</div>
-                </button>
-
-                <button className="w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="font-medium text-gray-900">Ayuda y Soporte</div>
-                  <div className="text-sm text-gray-600">¿Necesitas ayuda?</div>
-                </button>
               </div>
             </div>
           </div>
