@@ -34,72 +34,73 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   // Order details box with proper border
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(2);
-  doc.rect(20, 70, 170, 50);
-  
+  doc.rect(20, 70, 170, 60);
+
   // Order details content - properly spaced
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textColor);
-  
+
   // Left column
   doc.text('Número de Pedido:', 25, 82);
   doc.setFont('helvetica', 'normal');
-  doc.text(order.id, 25, 90);
-  
+  doc.text(order.id, 25, 89);
+
   doc.setFont('helvetica', 'bold');
   doc.text('Cliente:', 25, 100);
   doc.setFont('helvetica', 'normal');
-  doc.text(userName, 25, 108);
-  
+  doc.text(userName, 25, 107);
+
   doc.setFont('helvetica', 'bold');
   doc.text('Fecha:', 25, 118);
   doc.setFont('helvetica', 'normal');
-  doc.text(new Date(order.createdAt).toLocaleDateString('es-AR'), 25, 126);
-  
+  const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-AR') : new Date().toLocaleDateString('es-AR');
+  doc.text(orderDate, 25, 125);
+
   // Right column
   doc.setFont('helvetica', 'bold');
   doc.text('Horario de Retiro:', 110, 82);
   doc.setFont('helvetica', 'normal');
-  doc.text(order.scheduledTime, 110, 90);
-  
+  doc.text(order.scheduledTime, 110, 89);
+
   doc.setFont('helvetica', 'bold');
   doc.text('Estado:', 110, 100);
   doc.setFont('helvetica', 'normal');
   const statusText = order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', ' ');
-  doc.text(statusText, 110, 108);
-  
+  doc.text(statusText, 110, 107);
+
   doc.setFont('helvetica', 'bold');
   doc.text('Método de Pago:', 110, 118);
   doc.setFont('helvetica', 'normal');
-  const paymentText = order.paymentMethod === 'tarjeta' ? 'Tarjeta de Crédito' : 
+  const paymentText = order.paymentMethod === 'tarjeta' ? 'Tarjeta de Crédito' :
                      order.paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Efectivo';
-  doc.text(paymentText, 110, 126);
+  doc.text(paymentText, 110, 125);
   
   // Products section title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
-  doc.text('PRODUCTOS PEDIDOS', 20, 145);
+  doc.text('PRODUCTOS PEDIDOS', 20, 150);
   
   // Table header with background
   doc.setFillColor(...lightBrown);
-  doc.rect(20, 155, 170, 10, 'F');
-  
+  doc.rect(20, 160, 170, 10, 'F');
+
   // Table header borders
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(1);
-  doc.rect(20, 155, 170, 10);
-  
+  doc.rect(20, 160, 170, 10);
+
   // Table header text
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...textColor);
-  doc.text('Producto', 25, 162);
-  doc.text('Cant.', 120, 162);
-  doc.text('Precio Unit.', 140, 162);
-  doc.text('Subtotal', 170, 162);
-  
+  doc.text('Producto', 25, 167);
+  doc.text('Cant.', 120, 167);
+  doc.text('Precio Unit.', 140, 167);
+  doc.text('Subtotal', 170, 167);
+
   // Table content
-  let yPosition = 175;
+  let yPosition = 180;
   doc.setFont('helvetica', 'normal');
   
   order.items.forEach((item, index) => {
@@ -186,36 +187,12 @@ export const generateOrderPDF = (order: Order, userName: string) => {
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100, 100, 100);
   doc.text('Gracias por tu compra. Presenta este comprobante al retirar tu pedido.', 20, yPosition);
-  
+
   yPosition += 6;
   doc.text('Kiosco Escolar - Sistema de Pedidos Online', 20, yPosition);
-  
+
   yPosition += 6;
   doc.text(`Generado el: ${new Date().toLocaleString('es-AR')}`, 20, yPosition);
-  
-  // Simple QR code placeholder (properly sized and positioned)
-  const qrSize = 20;
-  const qrX = 165;
-  const qrY = yPosition - 25;
-  
-  doc.setDrawColor(...borderColor);
-  doc.setLineWidth(1);
-  doc.rect(qrX, qrY, qrSize, qrSize);
-  
-  // QR code pattern simulation (simple grid)
-  doc.setFillColor(...textColor);
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
-      if ((i + j) % 2 === 0) {
-        doc.rect(qrX + 2 + (i * 4), qrY + 2 + (j * 4), 3, 3, 'F');
-      }
-    }
-  }
-  
-  doc.setFontSize(8);
-  doc.setTextColor(...textColor);
-  doc.text('QR Code', qrX + 2, qrY + qrSize + 5);
-  doc.text('(Pedido)', qrX + 2, qrY + qrSize + 10);
   
   // Save the PDF with proper filename
   doc.save(`comprobante-${order.id}.pdf`);
