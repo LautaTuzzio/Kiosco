@@ -52,16 +52,33 @@ export const AnalyticsPage: React.FC = () => {
 
   // Prepare data for trends chart
   const prepareTrendsData = () => {
+    const now = new Date();
     const dailyData: { [key: string]: { orders: number; revenue: number; date: string } } = {};
-    
-    orders.forEach(order => {
+
+    // Calculate date threshold based on selected period
+    let dateThreshold = new Date();
+    if (selectedPeriod === 'day') {
+      dateThreshold.setHours(0, 0, 0, 0);
+    } else if (selectedPeriod === 'week') {
+      dateThreshold.setDate(dateThreshold.getDate() - 7);
+    } else if (selectedPeriod === 'month') {
+      dateThreshold.setDate(dateThreshold.getDate() - 30);
+    }
+
+    // Filter orders by period
+    const filteredOrders = orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= dateThreshold;
+    });
+
+    filteredOrders.forEach(order => {
       const dateObj = new Date(order.created_at);
       const date = dateObj.toLocaleDateString('es-AR', {
         day: '2-digit',
         month: '2-digit'
       });
-      const sortKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD for sorting
-      
+      const sortKey = dateObj.toISOString().split('T')[0];
+
       if (!dailyData[date]) {
         dailyData[date] = { orders: 0, revenue: 0, date: sortKey };
       }
@@ -76,17 +93,35 @@ export const AnalyticsPage: React.FC = () => {
         revenue: data.revenue,
         sortKey: data.date
       }))
-      .sort((a, b) => new Date(a.sortKey).getTime() - new Date(b.sortKey).getTime())
-      .slice(-7); // Last 7 days
+      .sort((a, b) => new Date(a.sortKey).getTime() - new Date(b.sortKey).getTime());
   };
 
+  // Filter orders based on selected period
+  const getFilteredOrders = () => {
+    let dateThreshold = new Date();
+    if (selectedPeriod === 'day') {
+      dateThreshold.setHours(0, 0, 0, 0);
+    } else if (selectedPeriod === 'week') {
+      dateThreshold.setDate(dateThreshold.getDate() - 7);
+    } else if (selectedPeriod === 'month') {
+      dateThreshold.setDate(dateThreshold.getDate() - 30);
+    }
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return orderDate >= dateThreshold;
+    });
+  };
+
+  const filteredOrders = getFilteredOrders();
+
   // Calculate metrics
-  const totalOrders = orders.length;
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total_amount, 0);
+  const totalOrders = filteredOrders.length;
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total_amount, 0);
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-  
+
   // Product sales analysis
-  const productSales = orders.reduce((acc, order) => {
+  const productSales = filteredOrders.reduce((acc, order) => {
     order.order_items?.forEach((item: any) => {
       const productName = item.products?.name;
       if (!acc[productName]) {
@@ -103,7 +138,7 @@ export const AnalyticsPage: React.FC = () => {
     .slice(0, 5);
 
   // Time analysis
-  const timeAnalysis = orders.reduce((acc, order) => {
+  const timeAnalysis = filteredOrders.reduce((acc, order) => {
     const time = order.scheduled_time;
     if (!acc[time]) {
       acc[time] = { orders: 0, revenue: 0 };
@@ -197,7 +232,7 @@ export const AnalyticsPage: React.FC = () => {
           />
           <MetricCard
             title="Pedidos Activos"
-            value={orders.filter(o => ['pendiente', 'en_preparacion', 'listo'].includes(o.status)).length.toString()}
+            value={filteredOrders.filter(o => ['pendiente', 'en_preparacion', 'listo'].includes(o.status)).length.toString()}
             icon={<Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />}
             color="bg-orange-600"
           />
@@ -205,7 +240,9 @@ export const AnalyticsPage: React.FC = () => {
 
         {/* Trends Chart */}
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Tendencia de Ventas (Últimos 7 días)</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+            Tendencia de Ventas ({selectedPeriod === 'day' ? 'Hoy' : selectedPeriod === 'week' ? 'Última Semana' : 'Último Mes'})
+          </h3>
           <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendsData}>

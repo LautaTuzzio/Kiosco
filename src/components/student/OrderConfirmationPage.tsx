@@ -196,12 +196,6 @@ export const OrderConfirmationPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Importante:</strong> Recibirás una notificación cuando tu pedido esté listo para retirar. 
-            Presenta tu número de pedido en el kiosco.
-          </p>
-        </div>
       </div>
     </div>
   );
