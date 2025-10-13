@@ -99,8 +99,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={handleClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-[60]" onClick={handleClose} />
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-xl max-w-md w-full mx-2 sm:mx-0 max-h-[95vh] overflow-y-auto">
           <div className="p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between">
             <div className="flex items-center">
