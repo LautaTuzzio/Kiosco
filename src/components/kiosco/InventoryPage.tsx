@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Edit, Save, X, Plus, Package } from 'lucide-react';
+import { Edit, Save, X, Plus, Package, Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -231,7 +231,7 @@ export const InventoryPage: React.FC = () => {
     try {
       const { error } = await supabase
         .from('products')
-        .update({ 
+        .update({
           is_available: !currentAvailability,
           updated_at: new Date().toISOString()
         })
@@ -241,7 +241,7 @@ export const InventoryPage: React.FC = () => {
         console.error('Supabase toggle error:', error);
         // Fallback to localStorage
         const localProducts = JSON.parse(localStorage.getItem('products') || '[]');
-        const updatedProducts = localProducts.map((p: Product) => 
+        const updatedProducts = localProducts.map((p: Product) =>
           p.id === productId ? { ...p, is_available: !currentAvailability } : p
         );
         localStorage.setItem('products', JSON.stringify(updatedProducts));
@@ -254,6 +254,35 @@ export const InventoryPage: React.FC = () => {
     } catch (error) {
       console.error('Error updating availability:', error);
       addToast('Error al actualizar disponibilidad', 'error');
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar el producto "${productName}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+        // Fallback to localStorage
+        const localProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        const updatedProducts = localProducts.filter((p: Product) => p.id !== productId);
+        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        setProducts(updatedProducts);
+      } else {
+        await loadProducts();
+      }
+
+      addToast('Producto eliminado correctamente', 'success');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      addToast('Error al eliminar producto', 'error');
     }
   };
 
@@ -388,39 +417,50 @@ export const InventoryPage: React.FC = () => {
                         {product.is_available ? 'Disponible' : 'No disponible'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {editingId === product.id ? (
-                        <>
+                        <div className="flex space-x-2">
                           <button
                             onClick={handleSave}
                             className="text-green-600 hover:text-green-900"
+                            title="Guardar cambios"
                           >
                             <Save className="h-4 w-4" />
                           </button>
                           <button
                             onClick={handleCancel}
                             className="text-gray-600 hover:text-gray-900"
+                            title="Cancelar"
                           >
                             <X className="h-4 w-4" />
                           </button>
-                        </>
+                        </div>
                       ) : (
-                        <>
+                        <div className="flex space-x-2">
                           <button
                             onClick={() => handleEdit(product)}
                             className="text-primary-600 hover:text-primary-900"
+                            title="Editar producto"
                           >
                             <Edit className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => toggleAvailability(product.id, product.is_available)}
                             className={`${
-                              product.is_available ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                              product.is_available ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'
                             }`}
+                            title={product.is_available ? 'Marcar como no disponible' : 'Marcar como disponible'}
                           >
                             <Package className="h-4 w-4" />
                           </button>
-                        </>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id, product.name)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
