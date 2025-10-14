@@ -92,7 +92,7 @@ Este sistema permite a los estudiantes realizar pedidos anticipados al kiosco es
 ### 1. Clonar el Repositorio
 
 ```bash
-git clone <url-del-repositorio>
+git clone https://github.com/LautaTuzzio/Kiosco
 cd Kiosco
 ```
 
