@@ -177,7 +177,7 @@ export const ProfilePage: React.FC = () => {
 
   if (!profileData) {
     return (
-      <div className="min-h-screen bg-cream-50 pl-16 flex items-center justify-center">
+      <div className="min-h-screen bg-cream-50 pt-16 lg:pt-0 lg:pl-16 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando perfil...</p>
@@ -187,7 +187,7 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pl-16">
+    <div className="min-h-screen bg-cream-50 pt-16 lg:pt-0 lg:pl-16">
       {/* Expandable Navigation */}
       <ExpandableNavigation />
       

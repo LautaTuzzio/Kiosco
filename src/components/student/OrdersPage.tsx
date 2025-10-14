@@ -310,7 +310,7 @@ export const OrdersPage: React.FC = () => {
 
   if (orders.length === 0) {
     return (
-      <div className="min-h-screen bg-cream-50 pl-16">
+      <div className="min-h-screen bg-cream-50 pt-16 lg:pt-0 lg:pl-16">
         <ExpandableNavigation />
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
@@ -329,7 +329,7 @@ export const OrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 pl-12 sm:pl-16">
+    <div className="min-h-screen bg-cream-50 pt-16 lg:pt-0 lg:pl-16">
       <ExpandableNavigation />
       
       <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">

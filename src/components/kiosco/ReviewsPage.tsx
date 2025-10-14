@@ -115,7 +115,7 @@ export const ReviewsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="ml-64 min-h-screen bg-cream-50 flex items-center justify-center">
+      <div className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-cream-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando reseñas...</p>
@@ -125,7 +125,7 @@ export const ReviewsPage: React.FC = () => {
   }
 
   return (
-    <div className="ml-64 min-h-screen bg-cream-50">
+    <div className="pt-16 lg:pt-0 lg:ml-64 min-h-screen bg-cream-50">
       <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Reseñas de Clientes</h1>
