@@ -3,9 +3,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ExpandableNavigation } from './ExpandableNavigation';
 import { supabase } from '../../lib/supabase';
 import { generateOrderPDF } from '../../utils/pdfGenerator';
-import { Clock, Package, CheckCircle, XCircle, AlertCircle, Download, X, CreditCard, Calendar, AlertTriangle } from 'lucide-react';
+import { Clock, Package, CheckCircle, XCircle, AlertCircle, Download, X, CreditCard, Calendar, AlertTriangle, Ban } from 'lucide-react';
 import { ReviewModal } from './ReviewModal';
 import { ReportModal } from '../common/ReportModal';
+import { useToast } from '../../contexts/ToastContext';
 
 interface Order {
   id: string;
@@ -22,12 +23,14 @@ interface Order {
 
 export const OrdersPage: React.FC = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [orderReviews, setOrderReviews] = useState<Record<string, boolean>>({});
+  const [cancellingOrder, setCancellingOrder] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -266,9 +269,43 @@ export const OrdersPage: React.FC = () => {
   };
 
   const handleReportKiosco = () => {
-    // For demo purposes, we'll use a fixed kiosquero ID
-    // In a real app, you'd get this from the order or system
     setShowReportModal(true);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!selectedOrder) return;
+
+    if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?')) {
+      return;
+    }
+
+    setCancellingOrder(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelado' })
+        .eq('id', selectedOrder.id)
+        .eq('status', 'pendiente');
+
+      if (error) throw error;
+
+      addToast('Pedido cancelado exitosamente', 'success');
+
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === selectedOrder.id
+            ? { ...order, status: 'cancelado' as const }
+            : order
+        )
+      );
+
+      setSelectedOrder(prev => prev ? { ...prev, status: 'cancelado' as const } : null);
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      addToast('Error al cancelar el pedido', 'error');
+    } finally {
+      setCancellingOrder(false);
+    }
   };
 
   if (orders.length === 0) {
@@ -477,27 +514,40 @@ export const OrdersPage: React.FC = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleDownloadPDF}
-                    className="flex-1 flex items-center justify-center bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    <Download className="h-5 w-5 mr-2" />
-                    Descargar Comprobante
-                  </button>
-                  <button
-                    onClick={handleReportKiosco}
-                    className="px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Reportar problema con el kiosco"
-                  >
-                    <AlertTriangle className="h-5 w-5" />
-                  </button>
-                  <button
-                    onClick={handleCloseModal}
-                    className="bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
-                  >
-                    Cerrar
-                  </button>
+                <div className="space-y-3">
+                  {selectedOrder.status === 'pendiente' && (
+                    <button
+                      onClick={handleCancelOrder}
+                      disabled={cancellingOrder}
+                      className="w-full flex items-center justify-center bg-red-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-600 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed"
+                    >
+                      <Ban className="h-5 w-5 mr-2" />
+                      {cancellingOrder ? 'Cancelando...' : 'Cancelar Pedido'}
+                    </button>
+                  )}
+
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleDownloadPDF}
+                      className="flex-1 flex items-center justify-center bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      <Download className="h-5 w-5 mr-2" />
+                      Descargar Comprobante
+                    </button>
+                    <button
+                      onClick={handleReportKiosco}
+                      className="px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Reportar problema con el kiosco"
+                    >
+                      <AlertTriangle className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={handleCloseModal}
+                      className="bg-primary-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </div>
 
                 {selectedOrder.status === 'listo' && (
