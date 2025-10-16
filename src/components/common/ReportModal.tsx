@@ -23,7 +23,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addToast } = useToast();
   const { user } = useAuth();
-
+  reportedUserId = "eff9ced8-dcef-4dd3-a993-6132d7d48178"
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,6 +61,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       if (error) {
         console.error('Error submitting report:', error);
         addToast('Error al enviar el reporte', 'error');
+        console.log()
       } else {
         addToast('Reporte enviado correctamente. Será revisado por un administrador.', 'success');
         setReason('');
