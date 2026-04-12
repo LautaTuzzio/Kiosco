@@ -309,12 +309,12 @@ CREATE POLICY "System can manage analytics"
 
 -- Insert sample users
 INSERT INTO users (email, password_hash, role, name, phone, address, birth_date, course, emergency_contact) VALUES
-('usuario@ciclobasico.com', '$2a$10$dummy.hash.for.demo123', 'ciclo_basico', 'Juan Pérez', '+54 9 11 1234-5678', 'Av. Corrientes 1234, CABA', '2008-03-15', '3° Año', 'María Pérez - +54 9 11 8765-4321'),
-('usuario@ciclosuperior.com', '$2a$10$dummy.hash.for.demo123', 'ciclo_superior', 'Ana García', '+54 9 11 2345-6789', 'Av. Santa Fe 5678, CABA', '2006-07-22', '5° Año', 'Carlos García - +54 9 11 9876-5432'),
-('usuario@kiosquero.com', '$2a$10$dummy.hash.for.demo123', 'kiosquero', 'Pedro López', '+54 9 11 3456-7890', 'Calle Falsa 123, CABA', '1985-12-10', NULL, 'Laura López - +54 9 11 5432-1098'),
-('usuario@admin.com', '$2a$10$dummy.hash.for.demo123', 'admin', 'María Rodríguez', '+54 9 11 4567-8901', 'Av. Rivadavia 9876, CABA', '1980-05-18', NULL, 'José Rodríguez - +54 9 11 6543-2109'),
-('estudiante1@ciclobasico.com', '$2a$10$dummy.hash.for.demo123', 'ciclo_basico', 'Lucas Martínez', '+54 9 11 5678-9012', 'Av. Cabildo 2468, CABA', '2008-11-03', '2° Año', 'Sandra Martínez - +54 9 11 7654-3210'),
-('estudiante2@ciclosuperior.com', '$2a$10$dummy.hash.for.demo123', 'ciclo_superior', 'Sofía Fernández', '+54 9 11 6789-0123', 'Av. Las Heras 1357, CABA', '2005-09-14', '6° Año', 'Roberto Fernández - +54 9 11 8765-4321');
+('usuario@ciclobasico.com', 'demo123', 'ciclo_basico', 'Juan Pérez', '+54 9 11 1234-5678', 'Av. Corrientes 1234, CABA', '2008-03-15', '3° Año', 'María Pérez - +54 9 11 8765-4321'),
+('usuario@ciclosuperior.com', 'demo123', 'ciclo_superior', 'Ana García', '+54 9 11 2345-6789', 'Av. Santa Fe 5678, CABA', '2006-07-22', '5° Año', 'Carlos García - +54 9 11 9876-5432'),
+('usuario@kiosquero.com', 'demo123', 'kiosquero', 'Pedro López', '+54 9 11 3456-7890', 'Calle Falsa 123, CABA', '1985-12-10', NULL, 'Laura López - +54 9 11 5432-1098'),
+('usuario@admin.com', 'demo123', 'admin', 'María Rodríguez', '+54 9 11 4567-8901', 'Av. Rivadavia 9876, CABA', '1980-05-18', NULL, 'José Rodríguez - +54 9 11 6543-2109'),
+('estudiante1@ciclobasico.com', 'demo123', 'ciclo_basico', 'Lucas Martínez', '+54 9 11 5678-9012', 'Av. Cabildo 2468, CABA', '2008-11-03', '2° Año', 'Sandra Martínez - +54 9 11 7654-3210'),
+('estudiante2@ciclosuperior.com', 'demo123', 'ciclo_superior', 'Sofía Fernández', '+54 9 11 6789-0123', 'Av. Las Heras 1357, CABA', '2005-09-14', '6° Año', 'Roberto Fernández - +54 9 11 8765-4321');
 
 -- Insert sample products
 INSERT INTO products (name, category, price, description, image_url, is_available, is_customizable, ingredients, stock_quantity) VALUES
